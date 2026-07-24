@@ -44,10 +44,10 @@ def to_csv(data: dict[str, Any]) -> bytes:
 
 def to_pdf(data: dict[str, Any]) -> bytes:
     buf = io.BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=LETTER, title="OSINT Nexus Report")
+    doc = SimpleDocTemplate(buf, pagesize=LETTER, title="Hello You Report")
     styles = getSampleStyleSheet()
     story = []
-    story.append(Paragraph("OSINT Nexus — Investigation Report", styles["Title"]))
+    story.append(Paragraph("Hello You — Investigation Report", styles["Title"]))
     story.append(Spacer(1, 12))
 
     meta = [

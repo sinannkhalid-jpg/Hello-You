@@ -1,10 +1,11 @@
-"""IP investigation router.
+"""
+IP investigation router.
 
-Port scanning is intentionally NOT performed by default. The `/port-scan`
-endpoint requires an explicit `authorized: true` confirmation in the body,
-and the target must be a public IP. We never scan localhost or private
-ranges, and we never bypass anything — these are plain TCP connect() probes
-to common ports on systems you have permission to test.
+Behavior:
+  • Geolocation / reverse DNS / port scanning stay the same (legacy).
+  • Threat intelligence is now sourced from the new provider
+    architecture (AbuseIPDB, VirusTotal, ipapi) via the orchestrator.
+  • Backward compatible: `IPResult` shape unchanged.
 """
 from __future__ import annotations
 
@@ -17,10 +18,12 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import CurrentUser, get_db
-from app.osint.ip_provider import geolocate, threat_intel
+from app.osint.ip_provider import geolocate  # reverse-DNS + base geo
 from app.osint.risk import aggregate, level
 from app.schemas.osint import IPResult
 from app.services.investigation_service import save_investigation
+from app.services.orchestrator import get_orchestrator
+from app.services.serializer import to_jsonable
 
 router = APIRouter(prefix="/ip", tags=["ip"])
 
@@ -57,7 +60,37 @@ async def _do_ip(
     ip = _validate_public_ip(ip)
     t0 = time.perf_counter()
     info = await geolocate(ip)
-    intel = await threat_intel(ip)
+
+    # ---- new: AbuseIPDB + VirusTotal + ipapi via orchestrator ---- #
+    intel: dict = {"sources": []}
+    abuse_reports: int | None = None
+    orch = get_orchestrator()
+    for pname in ("abuseipdb", "virustotal", "ipapi"):
+        prov = orch.providers.get(pname)
+        if prov is None or not prov.enabled:
+            continue
+        pr = await prov.run(ip)
+        intel[pname] = to_jsonable(pr.to_dict())
+        if pr.ok:
+            intel["sources"].append(pname)
+            d = pr.data or {}
+            if pname == "abuseipdb":
+                abuse_reports = int(d.get("malicious", 0) or 0)
+            if "geo" in d and isinstance(d["geo"], dict) and d["geo"].get("country"):
+                # ipapi enriches geo
+                base_geo = info.get("geo") or {}
+                for k, v in d["geo"].items():
+                    if v and not base_geo.get(k):
+                        base_geo[k] = v
+                info["geo"] = base_geo
+            if (d.get("isp") and not info.get("isp")) or (d.get("asn") and not info.get("asn")):
+                info["isp"] = info.get("isp") or d.get("isp")
+                info["asn"] = info.get("asn") or d.get("asn")
+                info["asn_org"] = info.get("asn_org") or d.get("asn_org")
+            if isinstance(d.get("score"), (int, float)):
+                info["__score"] = max(info.get("__score", 0), int(d["score"]))
+
+    # ---- port scanning ---- #
     open_ports: list[int] = []
     if scan_ports:
         if not authorized:
@@ -69,17 +102,13 @@ async def _do_ip(
         results = await asyncio.gather(*[_scan_port(ip, p) for p in COMMON_PORTS])
         open_ports = [p for p, ok in zip(COMMON_PORTS, results) if ok]
 
-    abuse = None
-    abuse_data = intel.get("abuseipdb") or {}
-    if isinstance(abuse_data, dict):
-        d = abuse_data.get("data") or {}
-        abuse = d.get("totalReports")
-
-    parts = []
+    parts: list[int] = []
     if open_ports:
         parts.append(min(20 + len(open_ports) * 5, 70))
-    if abuse and abuse > 5:
-        parts.append(min(20 + abuse, 90))
+    if abuse_reports and abuse_reports > 5:
+        parts.append(min(20 + abuse_reports, 90))
+    if info.get("__score"):
+        parts.append(int(info["__score"]))
     risk = aggregate(parts)
     duration_ms = int((time.perf_counter() - t0) * 1000)
     result = {
@@ -91,7 +120,7 @@ async def _do_ip(
         "asn_org": info.get("asn_org"),
         "open_ports": open_ports,
         "threat_intel": intel,
-        "abuse_reports": abuse,
+        "abuse_reports": abuse_reports,
         "risk_score": risk,
         "threat_level": level(risk),
     }

@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { fmtRelative } from "@/lib/utils";
 import { NetworkScan } from "@/components/effects/NetworkScan";
 import { RiskGauge } from "@/components/charts/RiskGauge";
+import { LiveInvestigation } from "@/components/modules/LiveInvestigation";
 
 const KIND_ICON: Record<string, any> = {
   username: User, email: Mail, phone: Phone, domain: Globe, ip: Server,
@@ -159,6 +160,11 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent><NetworkScan /></CardContent>
         </Card>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <LiveInvestigation initialKind="domain" initialTarget="example.com" />
+        <LiveInvestigation initialKind="ip" initialTarget="8.8.8.8" />
       </div>
 
       <motion.p

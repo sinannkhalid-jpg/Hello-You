@@ -1,4 +1,4 @@
-# OSINT Nexus — API reference
+# Hello You — API reference
 
 Base URL: `http://localhost:8000`
 OpenAPI / Swagger UI: `http://localhost:8000/docs`

@@ -16,6 +16,7 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.logging import get_logger, setup_logging
 from app.db.session import init_db
+from app.services.orchestrator import get_orchestrator
 
 setup_logging("INFO" if not settings.app_debug else "DEBUG")
 log = get_logger("app")
@@ -98,6 +99,14 @@ def create_app() -> FastAPI:
             log.info("Initialized SQLite database at %s", settings.database_url)
         else:
             log.info("Skipping auto-create (set DATABASE_URL=sqlite for dev)")
+
+        # Initialize the provider orchestrator
+        orch = get_orchestrator()
+        log.info(
+            "orchestrator ready: %d providers loaded (%d enabled)",
+            len(orch.providers),
+            sum(1 for p in orch.providers.values() if p.enabled),
+        )
 
     @app.get("/health", tags=["health"])
     async def health():

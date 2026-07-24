@@ -1,8 +1,8 @@
-# OSINT Nexus
+# Hello You
 
 > A production-quality **educational** OSINT platform for authorized investigations, cybersecurity education, and analysis of **publicly available** information.
 
-> **Ethics & scope.** OSINT Nexus is built strictly for:
+> **Ethics & scope.** Hello You is built strictly for:
 > - Authorized security testing on systems you own or have written permission to test.
 > - Cybersecurity education and research.
 > - Analysis of data that is already publicly available.
@@ -25,10 +25,40 @@ Everything runs on free tiers.
 
 ---
 
+## OSINT providers (all key-gated, all skippable)
+
+Each provider auto-loads its API key from environment. If a key is missing
+the provider is silently disabled — no errors, no partial lookups.
+
+| Provider        | Kind    | Key env var             | Required key? |
+|-----------------|---------|-------------------------|---------------|
+| Have I Been Pwned | email  | `HIBP_API_KEY`          | Yes (paid)    |
+| VirusTotal      | domain / ip | `VIRUSTOTAL_API_KEY` | Yes (free tier) |
+| AbuseIPDB       | ip      | `ABUSEIPDB_API_KEY`     | Yes (free tier) |
+| Shodan          | ip      | `SHODAN_API_KEY`        | Yes (free tier) |
+| SecurityTrails  | domain  | `SECURITYTRAILS_API_KEY`| Yes (paid)    |
+| IPAPI           | ip      | `IPAPI_KEY`             | No (free tier) |
+| Gravatar        | email   | (none)                  | No            |
+| crt.sh          | domain  | (none)                  | No            |
+| DNS             | domain  | (none)                  | No            |
+| WHOIS / RDAP    | domain  | (none)                  | No            |
+| LeakCheck       | email   | `LEAKCHECK_API_KEY`     | No (key raises quota) |
+| Censys          | ip      | `CENSYS_API_ID` + `CENSYS_API_SECRET` | Yes (paid) |
+| IntelX          | domain  | (none)                  | No            |
+
+### Adding a new provider
+
+Drop a file at `api/app/services/providers/<name>.py` that subclasses
+`BaseProvider`, then add it to the registry — or simply set
+`OSINT_EXTRA_PROVIDERS=shodan` to auto-load from env. See
+[docs/API.md](docs/API.md) for the full provider reference.
+
+---
+
 ## Repo layout
 
 ```
-osint-nexus/
+hello-you/
 ├── api/                    # FastAPI backend
 │   ├── app/
 │   │   ├── api/v1/         # Routers
@@ -36,13 +66,20 @@ osint-nexus/
 │   │   ├── db/             # SQLAlchemy session & base
 │   │   ├── models/         # ORM models
 │   │   ├── schemas/        # Pydantic schemas
-│   │   ├── services/       # Business logic
-│   │   ├── osint/          # OSINT providers (real public APIs)
-│   │   └── utils/
+│   │   ├── services/       # Business logic + providers
+│   │   └── main.py
 │   ├── tests/
 │   ├── requirements.txt
 │   └── .env.example
-├── web/                    # Next.js frontend (Step 2+)
+├── web/                    # Next.js 14 frontend
+│   ├── src/
+│   │   ├── app/            # (auth) + (app) routes
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── lib/
+│   │   ├── styles/
+│   │   └── types/
+│   └── package.json
 ├── migrations/             # SQL migration files
 ├── docs/                   # API + deployment docs
 └── README.md
@@ -52,8 +89,8 @@ osint-nexus/
 
 ## Quick start
 
+### Backend
 ```bash
-# Backend
 cd api
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
@@ -62,13 +99,17 @@ uvicorn app.main:app --reload --port 8000
 # OpenAPI docs at http://localhost:8000/docs
 ```
 
-See `docs/DEPLOYMENT.md` for Vercel + Render + Supabase deployment, and `docs/API.md` for the full API reference.
+### Frontend
+```bash
+cd web
+npm install
+cp .env.example .env.local
+npm run dev
+# open http://localhost:3000
+```
 
----
-
-## Modules (sidebar)
-
-Dashboard · Username · Email · Phone · Domain · IP · DNS · WHOIS · SSL · Certificate Transparency · Subdomain Discovery · Technology Detection · Relationship Graph · AI Report · Saved Investigations · Settings.
+See `docs/DEPLOYMENT.md` for Vercel + Render + Supabase deployment, and
+`docs/API.md` for the full API reference.
 
 ---
 

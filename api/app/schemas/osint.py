@@ -29,6 +29,7 @@ class InvestigationDetail(InvestigationSummary):
 
 # ---------- Username ----------
 class UsernameProfile(BaseModel):
+    model_config = ConfigDict(extra="allow")
     platform: str
     url: str
     exists: bool
@@ -38,7 +39,9 @@ class UsernameProfile(BaseModel):
     avatar_url: Optional[str] = None
     website: Optional[str] = None
     followers: Optional[int] = None
+    verified: bool = False
     confidence: float = Field(ge=0.0, le=1.0)
+    response_time_ms: int = 0
 
 
 class UsernameResult(BaseModel):

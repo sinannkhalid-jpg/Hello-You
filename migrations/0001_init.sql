@@ -1,4 +1,4 @@
--- OSINT Nexus — Supabase / Postgres schema
+-- Hello You — Supabase / Postgres schema
 -- Apply via: psql $DIRECT_URL -f migrations/0001_init.sql
 -- Or copy/paste into Supabase SQL editor.
 

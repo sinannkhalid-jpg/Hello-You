@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     )
 
     # App
-    app_name: str = "OSINT Nexus"
+    app_name: str = "Hello You"
     app_env: str = "development"
     app_debug: bool = True
     app_url: str = "http://localhost:8000"
@@ -39,11 +39,15 @@ class Settings(BaseSettings):
     supabase_anon_key: str | None = None
     supabase_service_role_key: str | None = None
 
-    # OSINT
+    # OSINT providers (the new provider architecture)
+    # Standard convention: each provider auto-loads `<NAME>_API_KEY` from env.
+    # Anything set here acts as a fallback for backward compatibility.
+    virustotal_api_key: str | None = None
+    abuseipdb_api_key: str | None = None
+    leakcheck_api_key: str | None = None
+    ipapi_key: str | None = None
     hibp_api_key: str | None = None
     ipapi_base_url: str = "https://ipapi.co"
-    abuseipdb_api_key: str | None = None
-    virustotal_api_key: str | None = None
 
     # Rate limit
     rate_limit_per_minute: int = 60
