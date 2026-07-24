@@ -163,6 +163,11 @@ async def health(user: CurrentUser, force: bool = False):
             "requires_key": prov.requires_key,
             "has_key": bool(prov.api_key),
         }
+        # Surface which auth mode the provider is using (helps verify
+        # that PAT vs legacy is wired correctly after a key change).
+        auth_mode = getattr(prov, "_auth", None)
+        if auth_mode is not None and hasattr(auth_mode, "mode"):
+            info["auth_mode"] = auth_mode.mode
         if not prov.enabled:
             info.update({"status": "disabled", "ok": False})
             _HEALTH_CACHE[name] = (now, info)

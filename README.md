@@ -43,7 +43,7 @@ the provider is silently disabled — no errors, no partial lookups.
 | DNS             | domain  | (none)                  | No            |
 | WHOIS / RDAP    | domain  | (none)                  | No            |
 | LeakCheck       | email   | `LEAKCHECK_API_KEY`     | No (key raises quota) |
-| Censys          | ip      | `CENSYS_API_ID` + `CENSYS_API_SECRET` | Yes (paid) |
+| Censys          | ip      | `CENSYS_PAT` *(new Platform API v3, preferred)* or `CENSYS_API_ID` + `CENSYS_API_SECRET` *(legacy v1)* | Yes (paid) |
 | IntelX          | domain  | (none)                  | No            |
 
 ### Adding a new provider

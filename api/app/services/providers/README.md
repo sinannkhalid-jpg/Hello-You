@@ -28,7 +28,7 @@ but always contains a `found` boolean and a `score` (0..100) when applicable.
 | AbuseIPDB       | ip      | `ABUSEIPDB_API_KEY`                   | Yes (free tier) |
 | Shodan          | ip      | `SHODAN_API_KEY`                      | Yes (free tier) |
 | IPAPI           | ip      | `IPAPI_KEY` (optional)                | No (free tier) |
-| Censys          | ip      | `CENSYS_API_ID` + `CENSYS_API_SECRET` | Yes (paid)    |
+| Censys          | ip      | `CENSYS_PAT` *(new Platform API v3, preferred)* or `CENSYS_API_ID` + `CENSYS_API_SECRET` *(legacy v1)* | Yes (paid)    |
 | HIBP            | email   | `HIBP_API_KEY`                        | Yes (paid)    |
 | LeakCheck       | email   | `LEAKCHECK_API_KEY` (optional)        | No (key raises quota) |
 | Gravatar        | email   | (none)                                | No            |
