@@ -167,3 +167,7 @@ export const Settings = {
   deleteAccount: () => api<{ deleted: boolean }>("/api/v1/settings/account", { method: "DELETE" }),
   info: () => api<any>("/api/v1/settings/info"),
 };
+
+export const Config = {
+  audit: (probe = false) => api<any>("/api/v1/config/audit", { query: { probe } }),
+};

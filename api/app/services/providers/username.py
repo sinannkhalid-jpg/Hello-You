@@ -44,16 +44,17 @@ import httpx
 from app.core.logging import get_logger
 from app.services.providers.base import BaseProvider
 from app.services.providers.username_helpers import (
-    DEFAULT_UA, _client_headers, html_check, parse_meta, pick_avatar,
+    DEFAULT_UA, _client_headers, parse_meta, pick_avatar,
     pick_display_name, safe_get, title_of,
-    check_aboutme, check_behance, check_bitbucket, check_devto,
-    check_dribbble, check_facebook, check_github, check_gitlab,
-    check_gravatar, check_hackernews, check_instagram, check_keybase,
-    check_linkedin, check_mastodon, check_medium, check_pinterest,
-    check_reddit, check_snapchat, check_soundcloud, check_spotify,
-    check_stackoverflow, check_steam, check_telegram, check_threads,
-    check_tiktok, check_twitch, check_twitter_x, check_vimeo,
-    check_youtube,
+    check_aboutme, check_behance, check_bitbucket, check_codeforces,
+    check_devto, check_discord, check_dockerhub, check_dribbble,
+    check_facebook, check_github, check_gitlab, check_gravatar,
+    check_hackernews, check_instagram, check_kaggle, check_keybase,
+    check_leetcode, check_linkedin, check_mastodon, check_medium,
+    check_npm, check_pinterest, check_pypi, check_reddit, check_snapchat,
+    check_soundcloud, check_spotify, check_stackoverflow, check_steam,
+    check_telegram, check_threads, check_tiktok, check_twitch,
+    check_twitter_x, check_vimeo, check_youtube,
 )
 
 log = get_logger("username")
@@ -156,6 +157,26 @@ PLATFORMS: list[Platform] = [
              notes="Often Cloudflare-challenged; some users can be confirmed."),
     Platform("About.me",     "https://about.me/{u}",            reliable=True,
              checkers=(check_aboutme,)),
+
+    # ---- Code, packages, communities ----
+    Platform("LeetCode",     "https://leetcode.com/{u}",        reliable=True,
+             checkers=(check_leetcode,)),
+    Platform("Codeforces",   "https://codeforces.com/profile/{u}", reliable=True,
+             checkers=(check_codeforces,)),
+    Platform("npm",          "https://www.npmjs.com/~{u}",      reliable=True,
+             checkers=(check_npm,),
+             notes="Profile page is Cloudflare-protected; checked via registry author search."),
+    Platform("DockerHub",    "https://hub.docker.com/u/{u}",    reliable=True,
+             checkers=(check_dockerhub,)),
+    Platform("PyPI",         "https://pypi.org/user/{u}/",      reliable=False,
+             checkers=(check_pypi,),
+             notes="Profile page is Cloudflare-protected; checked via search results."),
+    Platform("Kaggle",       "https://www.kaggle.com/{u}",      reliable=False,
+             checkers=(check_kaggle,),
+             notes="Profile page is reCAPTCHA-protected; reports blocked."),
+    Platform("Discord",      "https://discord.com/users/{u}",   reliable=False,
+             checkers=(check_discord,),
+             notes="No public username lookup API. Reported as blocked."),
 ]
 
 
@@ -208,13 +229,23 @@ class UsernameProvider(BaseProvider):
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
         final: list[dict[str, Any]] = []
+        blocked_list: list[dict[str, Any]] = []
+        not_found_list: list[dict[str, Any]] = []
         for r in results:
             if isinstance(r, Exception):
                 continue
-            if r and r.get("found"):
+            if not r:
+                continue
+            if r.get("blocked"):
+                blocked_list.append(r)
+            elif r.get("found"):
                 final.append(r)
+            else:
+                not_found_list.append(r)
 
         final.sort(key=lambda x: (x["confidence"], -x["response_time_ms"]), reverse=True)
+        blocked_list.sort(key=lambda x: x["platform"])
+        not_found_list.sort(key=lambda x: x["platform"])
         avg_conf = round(
             sum(f["confidence"] for f in final) / len(final), 2
         ) if final else 0.0
@@ -222,6 +253,8 @@ class UsernameProvider(BaseProvider):
             "username": username,
             "count": len(final),
             "results": final,
+            "blocked": blocked_list,
+            "not_found": not_found_list,
             "confidence": avg_conf,
             "total_checked": len(platforms),
         }
@@ -246,6 +279,7 @@ class UsernameProvider(BaseProvider):
         # Combine checker results
         yes: list[dict] = []
         no: list[dict] = []
+        blocked: list[dict] = []
         fields: dict[str, Any] = {}
         strategy_log: list[dict[str, Any]] = []
         for r in runs:
@@ -264,14 +298,41 @@ class UsernameProvider(BaseProvider):
                         fields[k] = r[k]
             elif r.get("ok") and r.get("found") is False:
                 no.append(r)
-            # If `found is None` (e.g. Cloudflare block), neither bucket
+            elif r.get("ok") and r.get("found") is None:
+                # Blocked: rate-limited, Cloudflare, reCAPTCHA, no API, etc.
+                blocked.append(r)
 
         yes_weight = len(yes)
         no_weight = len(no)
+        blocked_weight = len(blocked)
         total = yes_weight + no_weight
-        if total == 0:
-            # All checkers were ambiguous (e.g. Cloudflare). Treat as unknown.
+        response_time_ms = int((time.perf_counter() - t0) * 1000)
+
+        if total == 0 and blocked_weight == 0:
             return None
+
+        # Blocked-only: no signal either way. Surface the platform as
+        # "unavailable" so the caller can show "Instagram: rate-limited"
+        # instead of pretending the user is or isn't there.
+        if total == 0 and blocked_weight > 0:
+            extra = blocked[0].get("extra") or {}
+            return {
+                "platform": platform.name,
+                "profile_url": platform.build(username),
+                "username": username,
+                "display_name": None,
+                "bio": None,
+                "avatar_url": None,
+                "verified": False,
+                "found": None,
+                "blocked": True,
+                "block_reason": extra.get("reason", "unknown"),
+                "block_detail": extra.get("detail"),
+                "confidence": 0.0,
+                "response_time_ms": response_time_ms,
+                "reliable": platform.reliable,
+                "strategies": strategy_log,
+            }
 
         # Confidence: ratio of yes votes × reliability base
         agreement = yes_weight / total
@@ -286,7 +347,6 @@ class UsernameProvider(BaseProvider):
             found = False
             confidence = min(confidence, 0.4)
 
-        response_time_ms = int((time.perf_counter() - t0) * 1000)
         return {
             "platform": platform.name,
             "profile_url": platform.build(username),
@@ -296,6 +356,7 @@ class UsernameProvider(BaseProvider):
             "avatar_url": fields.get("avatar_url"),
             "verified": found,
             "found": found,
+            "blocked": False,
             "confidence": confidence,
             "response_time_ms": response_time_ms,
             "reliable": platform.reliable,

@@ -1,6 +1,7 @@
 import {
   LayoutDashboard, User, Mail, Phone, Globe, Server, Network, ShieldCheck, FileBadge,
   Binary, ScanSearch, Cpu, Share2, FileText, Bookmark, Settings as Cog, Shield,
+  KeyRound,
 } from "lucide-react";
 
 export type NavItem = {
@@ -26,6 +27,7 @@ export const NAV: NavItem[] = [
   { label: "Relationship Graph", href: "/graph",              icon: Share2,          group: "modules" },
   { label: "AI Report",          href: "/report",             icon: FileText,        group: "data" },
   { label: "Saved Investigations", href: "/investigations",   icon: Bookmark,        group: "data" },
+  { label: "API Audit",          href: "/config-audit",       icon: KeyRound,        group: "data" },
   { label: "Settings",           href: "/settings",           icon: Cog,             group: "data" },
 ];
 

@@ -45,10 +45,16 @@ class UsernameProfile(BaseModel):
 
 
 class UsernameResult(BaseModel):
+    model_config = ConfigDict(extra="allow")
     username: str
     profiles: list[UsernameProfile]
     confidence: float
     timeline: list[dict[str, Any]] = []
+    count: int = 0
+    blocked: list[dict[str, Any]] = []
+    not_found: list[dict[str, Any]] = []
+    providers_blocked: int = 0
+    total_checked: int = 0
 
 
 # ---------- Email ----------
@@ -56,14 +62,30 @@ class EmailResult(BaseModel):
     model_config = ConfigDict(extra="allow")
     email: str
     domain: str
+    provider: Optional[str] = None
+    is_free_mail: bool = False
+    is_disposable: bool = False
+    is_role: bool = False
     mx_records: list[dict[str, Any]] = []
     spf: Optional[str] = None
-    dkim: Optional[str] = None
+    dkim: Optional[dict[str, Any]] = None
     dmarc: Optional[str] = None
+    mta_sts: Optional[dict[str, Any]] = None
+    tls: Optional[dict[str, Any]] = None
+    bimi: Optional[str] = None
+    dnssec: Optional[dict[str, Any]] = None
+    nameservers: list[str] = []
+    domain_age: Optional[dict[str, Any]] = None
     gravatar_url: Optional[str] = None
+    gravatar_profile: Optional[dict[str, Any]] = None
     breach_exposure: Optional[dict[str, Any]] = None
+    git_leaks: Optional[dict[str, Any]] = None
+    leakcheck: Optional[dict[str, Any]] = None
+    reputation: Optional[dict[str, Any]] = None
+    providers: dict[str, Any] = {}
     risk_score: int = 0
     threat_level: str = "low"
+    duration_ms: int = 0
 
 
 # ---------- Phone ----------
@@ -71,14 +93,29 @@ class PhoneResult(BaseModel):
     model_config = ConfigDict(extra="allow")
     number: str
     e164: Optional[str] = ""
+    valid: bool = False
     country: Optional[str] = None
+    country_name: Optional[str] = None
     country_code: Optional[str] = None
     region: Optional[str] = None
     carrier: Optional[str] = None
     timezone: Optional[str] = None
+    timezones: list[str] = []
     number_type: Optional[str] = None
+    number_type_name: Optional[str] = None
     flag_emoji: Optional[str] = None
-    valid: bool = False
+    is_mobile: bool = False
+    is_fixed_line: bool = False
+    is_toll_free: bool = False
+    is_voip: bool = False
+    is_premium_rate: bool = False
+    formats: dict[str, Any] = {}
+    messaging: dict[str, Any] = {}
+    reputation: dict[str, Any] = {}
+    portability: dict[str, Any] = {}
+    business_association: Optional[Any] = None
+    confidence: float = 0.0
+    data_sources: list[str] = []
 
 
 # ---------- Domain ----------

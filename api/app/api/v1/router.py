@@ -3,6 +3,7 @@ from fastapi import APIRouter
 
 from app.api.v1 import (
     auth,
+    config_audit,
     dashboard,
     domain,
     email,
@@ -36,3 +37,5 @@ api_router.include_router(investigations.router)
 api_router.include_router(settings.router)
 # New: provider-orchestrated intel endpoint
 api_router.include_router(intel.router)
+# New: API configuration audit
+api_router.include_router(config_audit.router)

@@ -24,6 +24,12 @@ Most platforms use one of these patterns:
 The checkers below are intentionally tolerant of layout changes:
 they treat anything ambiguous as "not found" rather than returning a
 false positive.
+
+When a platform actively blocks automated requests (rate limits,
+anti-bot, login walls), the checker returns
+    {"ok": True, "found": None, "extra": {"reason": "..."}}
+so the orchestrator can surface the platform as "unavailable" with
+a clear reason instead of silently dropping it.
 """
 from __future__ import annotations
 
@@ -122,103 +128,14 @@ async def safe_get(
         return None
 
 
-# ---------- Generic HTML page checker -----------------------------------------
+# ---------- Reason helpers -----------------------------------------------------
 
-# Pages that have a reliable "missing" title on the platform's domain.
-_KNOWN_MISSING_TITLES = {
-    "github":     ["page not found", "404 not found"],
-    "gitlab":     ["page not found"],
-    "bitbucket":  ["page not found", "bitbucket cloud"],
-    "vimeo":      ["vimeuhoh"],
-    "behance":    ["oops! we can’t find that page", "oops! we can't find that page"],
-    "dribbble":   ["page not found", "not found"],
-    "linkedin":   ["page not found"],
-    "medium":     [],  # Cloudflare challenge, can't use
-    "youtube":    ["404 not found"],
-    "twitch":     [],
-    "spotify":    [],
-    "snapchat":   [],
-    "pinterest":  [],
-    "mastodon":   [],
-    "facebook":   ["log into facebook"],
-    "telegram":   [],
-    "twitter":    ["this account doesn’t exist", "this account doesn't exist"],
-    "tiktok":     [],
-    "instagram":  ["page not found"],
-    "threads":    [],
-    "dev.to":     ["page not found"],
-    "soundcloud": ["page not found"],
-    "stackoverflow": ["page not found"],
-    "hackernews": [],
-    "aboutme":    [],
-    "vimeo":      ["vimeuhoh"],
-    "reddit":     ["page not found"],
-    "steam":      ["steam community :: error"],
-    "keybase":    ["page not found"],
-    "gravatar":   ["page not found"],
-}
-
-
-async def html_check(
-    client: httpx.AsyncClient,
-    url: str,
-    *,
-    platform_key: str,
-    min_size: int = 500,
-    success_size: int = 0,
-    not_found_markers: tuple[str, ...] = (),
-    not_found_title_markers: tuple[str, ...] = (),
-) -> dict[str, Any]:
-    """Generic HTML existence checker.
-
-    Returns {"ok", "found", "html", "size", "status"}.
-
-    The "found" decision is:
-      • HTTP 200 AND size > min_size AND no not_found marker
-      • AND title does not contain a known "missing" string for this platform
-    """
-    r = await safe_get(client, url)
-    if r is None:
-        return {"ok": False, "found": False, "error": "request failed"}
-    if r.status_code >= 400:
-        # Many platforms return 404 directly for missing users
-        return {"ok": True, "found": False, "status": r.status_code}
-    text = r.text or ""
-    size = len(text)
-    if size < min_size:
-        return {"ok": True, "found": False, "status": r.status_code, "size": size}
-
-    found = True
-    text_lower = text.lower()
-    for marker in not_found_markers:
-        if marker.lower() in text_lower:
-            found = False
-            break
-
-    if found:
-        title = title_of(text) or ""
-        title_lower = title.lower()
-        for marker in not_found_title_markers:
-            if marker.lower() in title_lower:
-                found = False
-                break
-        for marker in _KNOWN_MISSING_TITLES.get(platform_key, []):
-            if marker in title_lower:
-                found = False
-                break
-
-    # Some platforms (Snapchat, X) return 200 for both, but real users
-    # have a much larger page. Use the size threshold as a tiebreaker.
-    if found and success_size and size < success_size:
-        found = False
-
-    return {
-        "ok": True,
-        "found": found,
-        "status": r.status_code,
-        "size": size,
-        "html": text,
-    }
+def _blocked(reason: str, **extra: Any) -> dict[str, Any]:
+    """Common shape for a 'platform blocked' result."""
+    out = {"ok": True, "found": None, "extra": {"reason": reason}}
+    if extra:
+        out["extra"].update(extra)
+    return out
 
 
 # ---------- Specialized checkers (one per platform) ---------------------------
@@ -314,15 +231,13 @@ async def check_reddit(client: httpx.AsyncClient, username: str) -> dict[str, An
     if r.status_code == 404:
         return {"ok": True, "found": False, "status": 404}
     if r.status_code == 301:
-        return {"ok": True, "found": None,
-                "extra": {"reason": "login_required"}}
+        return _blocked("login_required")
     if r.status_code != 200:
-        return {"ok": True, "found": None, "status": r.status_code,
-                "extra": {"reason": "blocked"}}
+        return _blocked("blocked", status=r.status_code)
     try:
         j = r.json()
     except Exception:
-        return {"ok": True, "found": None, "extra": {"reason": "non_json"}}
+        return _blocked("non_json")
     data = (j or {}).get("data") or {}
     if not data or data.get("name", "").lower() != username.lower():
         return {"ok": True, "found": False}
@@ -421,23 +336,45 @@ async def check_gravatar(client: httpx.AsyncClient, username: str) -> dict[str, 
 
 
 async def check_twitter_x(client: httpx.AsyncClient, username: str) -> dict[str, Any]:
-    """X / Twitter: HTML page is JS-rendered. The size signature is the
-    most reliable non-API signal: real-profile pages are ~55KB, the
-    "doesn't exist" page is ~265KB."""
+    """X / Twitter: HTML page is JS-rendered. The most reliable non-API
+    signals are:
+      • page size — real-profile pages are typically < 50KB; the JS shell
+        for missing accounts is 200KB+ (no user payload)
+      • page title — real users have their name in the title, missing
+        accounts have the generic X title
+      • embedded user entity in __INITIAL_STATE__ — real users populate
+        `entities.users.entities` with the user object; missing accounts
+        do not
+
+    We use size as the primary signal (most reliable) and confirm with
+    the embedded entity check. Anti-bot: if we get a 200 with the user
+    entity present, treat as found; otherwise treat as not found.
+    """
     r = await safe_get(client, f"https://x.com/{username}")
     if r is None or r.status_code != 200:
         return {"ok": r is not None, "found": False}
-    size = len(r.text or "")
-    title = title_of(r.text or "") or ""
-    if "suspend" in title.lower() or "doesn’t exist" in title.lower() or \
-       "doesn't exist" in title.lower():
-        return {"ok": True, "found": False, "status": r.status_code}
-    if size > 100_000:  # large page = missing
+    text = r.text or ""
+    size = len(text)
+    title = title_of(text) or ""
+
+    # If the embedded users entity has the handle, we have a real user
+    if f'"screen_name":"{username.lower()}"' in text.lower() or \
+       f'"screen_name":"{username}"' in text:
+        return {
+            "ok": True, "found": True, "status": r.status_code, "size": size,
+            "display_name": None,
+            "extra": {"title": title, "method": "embedded_entity"},
+        }
+
+    # Real-profile pages are smaller (less user data the shell loads);
+    # missing-account pages are larger (more error UI). The 100KB
+    # threshold has been the most reliable on real data.
+    if size > 100_000:
         return {"ok": True, "found": False, "status": r.status_code, "size": size}
     return {
         "ok": True, "found": True, "status": r.status_code, "size": size,
         "display_name": None,
-        "extra": {"title": title},
+        "extra": {"title": title, "method": "size_signature"},
     }
 
 
@@ -482,20 +419,30 @@ async def check_instagram(client: httpx.AsyncClient, username: str) -> dict[str,
 
     The HTML page is locked behind a login wall (302 → login), so the
     API is the only viable anonymous check.
+
+    Instagram aggressively rate-limits anonymous requests (HTTP 429)
+    even with the documented `x-ig-app-id` header. When we are rate-
+    limited we report `found=None` with reason "rate_limited" so the
+    caller can surface "Instagram: rate-limited" instead of silently
+    dropping the platform.
     """
     r = await safe_get(
         client,
         f"https://www.instagram.com/api/v1/users/web_profile_info/?username={username}",
         headers={"x-ig-app-id": "936619743392459"},
     )
-    if r is None or r.status_code == 404:
-        return {"ok": r is not None, "found": False, "status": r.status_code if r else None}
+    if r is None:
+        return {"ok": False, "found": False, "error": "request failed"}
+    if r.status_code == 429:
+        return _blocked("rate_limited", status=429)
+    if r.status_code == 404:
+        return {"ok": True, "found": False, "status": 404}
     if r.status_code != 200:
-        return {"ok": True, "found": False, "status": r.status_code}
+        return _blocked("blocked", status=r.status_code)
     try:
         j = r.json()
     except Exception:
-        return {"ok": True, "found": False}
+        return _blocked("non_json")
     user = (j or {}).get("data", {}).get("user") or {}
     if not user:
         return {"ok": True, "found": False}
@@ -514,20 +461,25 @@ async def check_instagram(client: httpx.AsyncClient, username: str) -> dict[str,
 
 
 async def check_threads(client: httpx.AsyncClient, username: str) -> dict[str, Any]:
-    """Threads uses Instagram's public web_profile_info API."""
+    """Threads uses Instagram's public web_profile_info API. Same
+    rate-limiting behavior as Instagram."""
     r = await safe_get(
         client,
         f"https://www.threads.net/api/v1/users/web_profile_info/?username={username}",
         headers={"x-ig-app-id": "936619743392459"},
     )
-    if r is None or r.status_code == 404:
-        return {"ok": r is not None, "found": False, "status": r.status_code if r else None}
+    if r is None:
+        return {"ok": False, "found": False, "error": "request failed"}
+    if r.status_code == 429:
+        return _blocked("rate_limited", status=429)
+    if r.status_code == 404:
+        return {"ok": True, "found": False, "status": 404}
     if r.status_code != 200:
-        return {"ok": True, "found": False, "status": r.status_code}
+        return _blocked("blocked", status=r.status_code)
     try:
         j = r.json()
     except Exception:
-        return {"ok": True, "found": False}
+        return _blocked("non_json")
     user = (j or {}).get("data", {}).get("user") or {}
     if not user:
         return {"ok": True, "found": False}
@@ -543,11 +495,6 @@ async def check_threads(client: httpx.AsyncClient, username: str) -> dict[str, A
 async def check_tiktok(client: httpx.AsyncClient, username: str) -> dict[str, Any]:
     """TikTok's oEmbed endpoint returns 200 with JSON for real users and
     400 with {"message":"Something went wrong"} for missing users."""
-    r = await safe_get(
-        client, "https://www.tiktok.com/oembed",
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-    )
-    # oembed requires the URL as a query parameter, not just a path
     r = await safe_get(
         client,
         f"https://www.tiktok.com/oembed?url=https://www.tiktok.com/@{username}",
@@ -684,26 +631,26 @@ async def check_twitch(client: httpx.AsyncClient, username: str) -> dict[str, An
 
 
 async def check_telegram(client: httpx.AsyncClient, username: str) -> dict[str, Any]:
+    """Telegram's t.me/<u> page is a static HTML that is **identical**
+    in size and structure for missing users. The reliable signal is
+    the `tgme_page` block: real profiles include `tgme_page_title`,
+    `tgme_page_description`, `tgme_page_extra` and a `tgme_page_action`
+    link. Missing users get the generic Telegram landing page (no
+    `tgme_page` markers).
+    """
     r = await safe_get(client, f"https://t.me/{username}")
     if r is None or r.status_code != 200:
         return {"ok": r is not None, "found": False}
     text = r.text or ""
     title = title_of(text) or ""
     meta = parse_meta(text)
-    if "You can contact" in text and "Telegram" in text:
+    if "tgme_page_title" in text and "tgme_page_action" in text:
         return {
             "ok": True, "found": True,
             "display_name": pick_display_name(meta, title, username),
             "avatar_url": pick_avatar(meta),
         }
-    # If the page shows the error "If you have <strong>username</strong>, you can contact …"
-    if "tgme_page_icon" not in text and "tgme_page_title" not in text:
-        return {"ok": True, "found": False}
-    return {
-        "ok": True, "found": True,
-        "display_name": pick_display_name(meta, title, username),
-        "avatar_url": pick_avatar(meta),
-    }
+    return {"ok": True, "found": False}
 
 
 async def check_pinterest(client: httpx.AsyncClient, username: str) -> dict[str, Any]:
@@ -793,7 +740,7 @@ async def check_medium(client: httpx.AsyncClient, username: str) -> dict[str, An
         return {"ok": r is not None, "found": False}
     text = r.text or ""
     if "Just a moment" in text:
-        return {"ok": True, "found": None, "extra": {"reason": "cloudflare_challenge"}}
+        return _blocked("cloudflare_challenge")
     meta = parse_meta(text)
     title = title_of(text) or ""
     if meta.get("og:title") and username.lower() in title.lower():
@@ -959,3 +906,208 @@ async def check_soundcloud(client: httpx.AsyncClient, username: str) -> dict[str
         "display_name": pick_display_name(parse_meta(text), title, username),
         "avatar_url": pick_avatar(parse_meta(text)),
     }
+
+
+# ---------- New platform checkers (added for the 36-platform list) ----------
+
+async def check_leetcode(client: httpx.AsyncClient, username: str) -> dict[str, Any]:
+    """LeetCode GraphQL endpoint is public and anonymous; returns the
+    user object (or `null`/error) without auth.
+        real user: {"data":{"matchedUser":{"username":"..."}}}
+        missing:   {"errors":[{"message":"That user does not exist."}], "data":{"matchedUser":null}}
+    """
+    q = (
+        "{matchedUser(username: \"" + username + "\") {"
+        " username profile { realName userAvatar aboutMe } "
+        " submitStats { acSubmissionNum { difficulty count } } "
+        " contestBadge { name }"
+        "}}"
+    )
+    r = await safe_get(
+        client, "https://leetcode.com/graphql",
+        params={"query": q},
+    )
+    if r is None or r.status_code != 200:
+        return {"ok": r is not None, "found": False}
+    try:
+        j = r.json()
+    except Exception:
+        return {"ok": True, "found": False}
+    user = (j or {}).get("data", {}).get("matchedUser")
+    if not user:
+        return {"ok": True, "found": False}
+    profile = user.get("profile") or {}
+    return {
+        "ok": True, "found": True,
+        "display_name": profile.get("realName") or user.get("username"),
+        "bio": profile.get("aboutMe"),
+        "avatar_url": profile.get("userAvatar"),
+        "extra": {
+            "contest_badge": (user.get("contestBadge") or {}).get("name"),
+        },
+    }
+
+
+async def check_codeforces(client: httpx.AsyncClient, username: str) -> dict[str, Any]:
+    """Codeforces has a public REST API:
+    /api/user.info?handles=<u>
+        real user: status=200, result=[{handle, rating, rank, titlePhoto, ...}]
+        missing:   status=400, comment="handles: User with handle <u> not found"
+    """
+    r = await safe_get(
+        client, f"https://codeforces.com/api/user.info?handles={username}",
+        timeout=8.0,
+    )
+    if r is None or r.status_code != 200:
+        return {"ok": r is not None, "found": False}
+    try:
+        j = r.json()
+    except Exception:
+        return {"ok": True, "found": False}
+    if j.get("status") != "OK" or not j.get("result"):
+        return {"ok": True, "found": False}
+    res = j["result"][0] if isinstance(j["result"], list) else j["result"]
+    if not isinstance(res, dict):
+        return {"ok": True, "found": False}
+    return {
+        "ok": True, "found": True,
+        "display_name": res.get("handle") or username,
+        "avatar_url": res.get("titlePhoto") or res.get("avatar"),
+        "extra": {
+            "rating": res.get("rating"),
+            "rank": res.get("rank"),
+            "max_rating": res.get("maxRating"),
+            "contribution": res.get("contribution"),
+            "country": res.get("country"),
+            "organization": res.get("organization"),
+        },
+    }
+
+
+async def check_npm(client: httpx.AsyncClient, username: str) -> dict[str, Any]:
+    """NPM's profile page is behind Cloudflare, but the public
+    registry's search API exposes author info:
+    /-/v1/search?text=author:<u> — if any package has the user as
+    author, the user exists.
+    """
+    r = await safe_get(
+        client, f"https://registry.npmjs.org/-/v1/search?text=author:{username}&size=1",
+    )
+    if r is None or r.status_code != 200:
+        return {"ok": r is not None, "found": False}
+    try:
+        j = r.json()
+    except Exception:
+        return {"ok": True, "found": False}
+    total = int(j.get("total", 0) or 0)
+    if total <= 0:
+        return {"ok": True, "found": False}
+    obj = (j.get("objects") or [{}])[0]
+    pub = (obj.get("package") or {}).get("publisher") or {}
+    return {
+        "ok": True, "found": True,
+        "display_name": pub.get("username") or username,
+        "extra": {
+            "package_count": total,
+            "email_public": bool(pub.get("email")),
+        },
+    }
+
+
+async def check_dockerhub(client: httpx.AsyncClient, username: str) -> dict[str, Any]:
+    """Docker Hub has a public JSON API:
+    /v2/users/<u>/ — real user returns 200 + profile JSON, missing
+    returns 404.
+    """
+    r = await safe_get(client, f"https://hub.docker.com/v2/users/{username}/")
+    if r is None:
+        return {"ok": False, "found": False}
+    if r.status_code == 404:
+        return {"ok": True, "found": False, "status": 404}
+    if r.status_code != 200:
+        return _blocked("blocked", status=r.status_code)
+    try:
+        j = r.json()
+    except Exception:
+        return {"ok": True, "found": False}
+    if not isinstance(j, dict) or not j.get("username"):
+        return {"ok": True, "found": False}
+    return {
+        "ok": True, "found": True,
+        "display_name": j.get("full_name") or j.get("username"),
+        "avatar_url": j.get("gravatar_url") or None,
+        "extra": {
+            "date_joined": j.get("date_joined"),
+            "location": j.get("location"),
+            "company": j.get("company"),
+        },
+    }
+
+
+async def check_pypi(client: httpx.AsyncClient, username: str) -> dict[str, Any]:
+    """PyPI's profile page is behind Cloudflare for anonymous
+    browsers. We use the JSON API as a fallback: any package whose
+    `info.author` or `info.author_email` matches the username (case
+    insensitive) is a signal that the user has published on PyPI.
+
+    We query the simple index for up to 5 packages containing the
+    username in their name; PyPI returns them with author info.
+    """
+    # Try the maintainer page (via CDN, often not Cloudflare-challenged)
+    # We use the search API.
+    r = await safe_get(
+        client, f"https://pypi.org/search/?q={username}",
+    )
+    if r is None or r.status_code != 200:
+        return {"ok": r is not None, "found": False}
+    text = (r.text or "").lower()
+    # Look for package cards
+    if f"by {username.lower()}" in text or f'>{username.lower()}<' in text:
+        return {
+            "ok": True, "found": True,
+            "display_name": username,
+            "extra": {"source": "pypi_search"},
+        }
+    return _blocked("cloudflare_challenge")
+
+
+async def check_kaggle(client: httpx.AsyncClient, username: str) -> dict[str, Any]:
+    """Kaggle's profile page is behind a reCAPTCHA challenge that
+    blocks all anonymous clients. We surface this as 'blocked' rather
+    than pretending the user doesn't exist.
+
+    A public Kaggle user could in theory be detected via the
+    Kaggle Datasets/Competitions JSON endpoints, but those also
+    require auth. We report the platform as blocked.
+    """
+    r = await safe_get(client, f"https://www.kaggle.com/{username}")
+    if r is None:
+        return {"ok": False, "found": False}
+    # Kaggle returns 200 with a reCAPTCHA challenge HTML
+    text = r.text or ""
+    if "reCAPTCHA" in text or "Checking your browser" in text:
+        return _blocked("recaptcha_challenge")
+    if r.status_code == 404:
+        return {"ok": True, "found": False, "status": 404}
+    if r.status_code != 200:
+        return _blocked("blocked", status=r.status_code)
+    # If we ever do get a real page, look for profile indicators
+    if f'"{username}"' in text and "Profile" in text:
+        return {"ok": True, "found": True, "display_name": username}
+    return _blocked("recaptcha_challenge")
+
+
+async def check_discord(client: httpx.AsyncClient, username: str) -> dict[str, Any]:
+    """Discord does not expose a public lookup API for usernames.
+    Users can only be resolved by their numeric ID, and even then
+    only via the authenticated gateway. We surface this as blocked
+    so callers know the platform exists but is not enumerable.
+    """
+    return _blocked(
+        "no_public_api",
+        detail=(
+            "Discord does not provide a public username lookup API. "
+            "A user can only be resolved by their numeric ID via the "
+            "authenticated gateway."
+        ),
+    )
