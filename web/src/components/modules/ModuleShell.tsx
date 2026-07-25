@@ -28,10 +28,10 @@ export function ModuleShell({
       </Card>
 
       {error && (
-        <Card className="border-rose-500/30">
-          <CardContent className="p-5 text-sm text-rose-300">
+        <Card className="border-[#ef4444]/30">
+          <CardContent className="p-5 text-sm text-[#ef4444]">
             <p className="font-medium">Investigation failed</p>
-            <p className="text-muted-foreground mt-1">{error?.message || "Unknown error"}</p>
+            <p className="text-[#a1a1aa] mt-1">{error?.message || "Unknown error"}</p>
           </CardContent>
         </Card>
       )}

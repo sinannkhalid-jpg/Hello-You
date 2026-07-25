@@ -1,8 +1,4 @@
 "use client";
-/**
- * A small "run a live investigation" panel. Streams the SSE endpoint and
- * shows progress + the final result (confidence, evidence, graph).
- */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, RotateCcw, Download, Activity } from "lucide-react";
@@ -33,7 +29,7 @@ export function LiveInvestigation({
 }) {
   const [kind, setKind] = useState(initialKind);
   const [target, setTarget] = useState(initialTarget);
-  const { events, result, streaming, error, start, cancel, reset } = useInvestigationStream();
+  const { events, result, streaming, error, start, cancel } = useInvestigationStream();
 
   function run() {
     if (!target.trim() || streaming) return;
@@ -94,7 +90,7 @@ export function LiveInvestigation({
         <InvestigationProgress events={events} result={result} streaming={streaming} />
 
         {error && (
-          <p className="text-xs text-rose-300">{error}</p>
+          <p className="text-xs text-[#ef4444]">{error}</p>
         )}
 
         <AnimatePresence>
@@ -105,11 +101,11 @@ export function LiveInvestigation({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="rounded-md border border-white/10 bg-white/5 p-3 text-sm space-y-2"
+              className="rounded-md border border-[#262626] bg-[#0f0f0f] p-3 text-sm space-y-2"
             >
               <div className="flex items-center gap-2 flex-wrap">
                 <ThreatChip level={result.summary?.risk} score={result.summary?.score} />
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-[#a1a1aa]">
                   confidence {(result.confidence * 100).toFixed(0)}% · {result.meta?.providers_ok}/{result.meta?.providers_queried} providers
                 </span>
               </div>
@@ -120,7 +116,7 @@ export function LiveInvestigation({
                       <span className={`chip chip-${e.severity}`} style={{ minWidth: 64, justifyContent: "center" }}>
                         {e.severity}
                       </span>
-                      <span className="truncate">{e.title}</span>
+                      <span className="truncate text-[#a1a1aa]">{e.title}</span>
                     </li>
                   ))}
                 </ul>

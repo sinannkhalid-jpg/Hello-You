@@ -1,5 +1,9 @@
 import type { Config } from "tailwindcss";
 
+/**
+ * Monochrome enterprise design system.
+ * Single dark surface, white accent, status colors only.
+ */
 const config: Config = {
   darkMode: ["class"],
   content: ["./src/**/*.{ts,tsx}"],
@@ -11,54 +15,48 @@ const config: Config = {
     },
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        border: "#262626",
+        input: "#262626",
+        ring: "#ffffff",
+        background: "#090909",
+        foreground: "#ffffff",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "#ffffff",
+          foreground: "#000000",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: "#111111",
+          foreground: "#ffffff",
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+          DEFAULT: "#ef4444",
+          foreground: "#ffffff",
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: "#151515",
+          foreground: "#a1a1aa",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "#1a1a1a",
+          foreground: "#ffffff",
         },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+          DEFAULT: "#151515",
+          foreground: "#ffffff",
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: "#151515",
+          foreground: "#ffffff",
         },
-        // Cyber accent palette
-        cyber: {
-          cyan: "#00f0ff",
-          violet: "#8b5cf6",
-          pink: "#ff2bd6",
-          green: "#34d399",
-          red: "#ff4d6d",
-          amber: "#f59e0b",
-          grid: "rgba(0, 240, 255, 0.08)",
-        },
+        // Status (semantic) colors — the ONLY colored tokens
+        success: { DEFAULT: "#22c55e", fg: "#16a34a" },
+        warning: { DEFAULT: "#f59e0b", fg: "#d97706" },
+        danger:  { DEFAULT: "#ef4444", fg: "#dc2626" },
         threat: {
-          low: "#34d399",
-          medium: "#f59e0b",
-          high: "#ff8a3d",
-          critical: "#ff4d6d",
+          low:      "#22c55e",
+          medium:   "#f59e0b",
+          high:     "#f59e0b",
+          critical: "#ef4444",
         },
       },
       borderRadius: {
@@ -76,23 +74,6 @@ const config: Config = {
           from: { opacity: "0", transform: "translateY(8px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
-        "scan-line": {
-          "0%": { transform: "translateY(-100%)" },
-          "100%": { transform: "translateY(100%)" },
-        },
-        "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 0 0 rgba(0,240,255,0.5)" },
-          "50%": { boxShadow: "0 0 24px 6px rgba(0,240,255,0.25)" },
-        },
-        "radar-spin": { to: { transform: "rotate(360deg)" } },
-        shimmer: {
-          "0%": { backgroundPosition: "-200% 0" },
-          "100%": { backgroundPosition: "200% 0" },
-        },
-        "grid-drift": {
-          "0%": { backgroundPosition: "0 0" },
-          "100%": { backgroundPosition: "60px 60px" },
-        },
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -103,26 +84,13 @@ const config: Config = {
         },
       },
       animation: {
-        "fade-in": "fade-in 200ms ease-out",
-        "fade-up": "fade-up 240ms ease-out",
-        "scan-line": "scan-line 2.4s linear infinite",
-        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
-        "radar-spin": "radar-spin 4s linear infinite",
-        shimmer: "shimmer 2s linear infinite",
-        "grid-drift": "grid-drift 8s linear infinite",
+        "fade-in": "fade-in 150ms ease-out",
+        "fade-up": "fade-up 150ms ease-out",
         "accordion-down": "accordion-down 200ms ease-out",
         "accordion-up": "accordion-up 200ms ease-out",
       },
-      backgroundImage: {
-        "grid-pattern":
-          "linear-gradient(to right, rgba(0,240,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,240,255,0.06) 1px, transparent 1px)",
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-      },
-      backgroundSize: {
-        "grid-30": "30px 30px",
-        "grid-60": "60px 60px",
+      boxShadow: {
+        card: "0 1px 0 0 rgba(255,255,255,0.02) inset, 0 1px 2px rgba(0,0,0,0.4)",
       },
     },
   },

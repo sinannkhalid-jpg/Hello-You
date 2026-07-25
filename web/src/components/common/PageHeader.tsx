@@ -20,18 +20,18 @@ export function PageHeader({
     <motion.header
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25 }}
+      transition={{ duration: 0.2 }}
       className={cn("flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between", className)}
     >
       <div className="flex items-start gap-3">
         {icon && (
-          <div className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-white/10 text-cyan-200">
+          <div className="grid h-10 w-10 place-items-center rounded-md bg-[#1a1a1a] border border-[#262626] text-white">
             {icon}
           </div>
         )}
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-          {description && <p className="text-sm text-muted-foreground">{description}</p>}
+          {description && <p className="text-sm text-[#a1a1aa]">{description}</p>}
         </div>
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}

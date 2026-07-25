@@ -2,11 +2,6 @@
 /**
  * Live progress UI for an investigation. Renders the staged events from
  * the SSE stream: "Searching…", "Checking Shodan…", "Completed", etc.
- *
- * Optional usage:
- *   const { events, result, streaming, start } = useInvestigationStream();
- *   start("domain", "example.com");
- *   <InvestigationProgress events={events} result={result} streaming={streaming} />
  */
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, XCircle, Loader2, Search, SkipForward } from "lucide-react";
@@ -24,12 +19,12 @@ const STAGE_ICON: Record<string, any> = {
 };
 
 const STAGE_COLOR: Record<string, string> = {
-  start: "text-cyan-300",
-  checking: "text-cyan-300",
-  completed: "text-emerald-300",
-  failed: "text-rose-300",
-  skipped: "text-muted-foreground",
-  done: "text-emerald-300",
+  start: "text-[#a1a1aa]",
+  checking: "text-white",
+  completed: "text-[#22c55e]",
+  failed: "text-[#ef4444]",
+  skipped: "text-[#71717a]",
+  done: "text-[#22c55e]",
 };
 
 export function InvestigationProgress({
@@ -46,9 +41,9 @@ export function InvestigationProgress({
   }, [events.length]);
 
   return (
-    <div className="rounded-xl border border-white/10 bg-black/30 p-4 font-mono text-xs max-h-[420px] overflow-y-auto">
+    <div className="rounded-xl border border-[#262626] bg-[#0a0a0a] p-4 font-mono text-xs max-h-[420px] overflow-y-auto text-[#a1a1aa]">
       {events.length === 0 && streaming && (
-        <p className="text-muted-foreground">Initializing…</p>
+        <p className="text-[#71717a]">Initializing…</p>
       )}
       <AnimatePresence initial={false}>
         {events.map((e, i) => {
@@ -72,7 +67,7 @@ export function InvestigationProgress({
                 {e.message}
               </span>
               {typeof e.meta?.duration_ms === "number" && (
-                <span className="ml-auto text-[10px] text-muted-foreground">
+                <span className="ml-auto text-[10px] text-[#71717a]">
                   {e.meta.duration_ms}ms
                 </span>
               )}

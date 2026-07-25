@@ -1,7 +1,6 @@
 "use client";
 /**
- * Network scan animation used on the dashboard hero and loading states.
- * Streams faux log lines; decorative only.
+ * Decorative faux log lines. Monochrome.
  */
 import { useEffect, useState } from "react";
 
@@ -32,11 +31,11 @@ export function NetworkScan() {
     return () => clearInterval(id);
   }, []);
   return (
-    <div className="rounded-lg border border-cyan-400/15 bg-black/40 p-3 font-mono text-xs text-cyan-200/80 scan-overlay">
+    <div className="rounded-lg border border-[#262626] bg-[#0a0a0a] p-3 font-mono text-xs text-[#a1a1aa]">
       {lines.map((l, idx) => (
         <div key={idx} className="truncate">{l}</div>
       ))}
-      <div className="mt-1 text-cyan-300/70">▌</div>
+      <div className="mt-1 text-[#71717a]">▌</div>
     </div>
   );
 }

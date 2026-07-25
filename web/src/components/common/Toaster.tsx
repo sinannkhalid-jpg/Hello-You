@@ -7,10 +7,9 @@ export function Toaster() {
       position="top-right"
       toastOptions={{
         style: {
-          background: "rgba(15, 23, 42, 0.85)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          color: "#e2e8f0",
-          backdropFilter: "blur(12px)",
+          background: "#151515",
+          border: "1px solid #262626",
+          color: "#ffffff",
         },
       }}
     />

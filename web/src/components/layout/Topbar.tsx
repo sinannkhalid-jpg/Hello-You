@@ -42,7 +42,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
     .join("");
 
   return (
-    <header className="sticky top-0 z-20 h-16 glass-strong border-b border-white/5">
+    <header className="sticky top-0 z-20 h-16 bg-[#111111] border-b border-[#262626]">
       <div className="h-full px-3 sm:px-5 flex items-center gap-2 sm:gap-4">
         <Button variant="ghost" size="icon" onClick={onMenu} className="md:hidden" aria-label="Open menu">
           <Menu className="h-5 w-5" />
@@ -50,12 +50,12 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
 
         <form onSubmit={onSearch} className="flex-1 max-w-2xl">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#71717a]" />
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Quick search — username, email, phone, domain, IP…"
-              className="pl-9 h-10 bg-white/5"
+              className="pl-9 h-10"
               aria-label="Quick search"
             />
           </div>
@@ -65,20 +65,20 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-white/5">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-gradient-to-br from-cyan-500/30 to-violet-500/30 text-foreground text-xs">
+                <AvatarFallback className="bg-[#262626] text-white text-xs">
                   {initials || "?"}
                 </AvatarFallback>
               </Avatar>
               <div className="hidden sm:block text-left">
                 <p className="text-xs font-medium leading-none">{user?.full_name || user?.email}</p>
-                <p className="text-[10px] text-muted-foreground leading-none mt-0.5">{user?.email}</p>
+                <p className="text-[10px] text-[#a1a1aa] leading-none mt-0.5">{user?.email}</p>
               </div>
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              <ChevronDown className="h-3.5 w-3.5 text-[#71717a]" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>Signed in as</DropdownMenuLabel>
-            <div className="px-2 pb-2 text-xs text-muted-foreground truncate">{user?.email}</div>
+            <div className="px-2 pb-2 text-xs text-[#a1a1aa] truncate">{user?.email}</div>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/settings"><Cog className="h-4 w-4" /> Settings</Link>
@@ -87,7 +87,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
               <Link href="/investigations"><UserIcon className="h-4 w-4" /> My investigations</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onLogout} className="text-rose-300 focus:text-rose-200">
+            <DropdownMenuItem onClick={onLogout} className="text-[#ef4444] focus:text-[#ef4444]">
               <LogOut className="h-4 w-4" /> Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>

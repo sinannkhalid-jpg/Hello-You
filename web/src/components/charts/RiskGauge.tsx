@@ -8,10 +8,10 @@ export function RiskGauge({ value = 0, label = "Risk" }: { value?: number; label
     return () => clearTimeout(t);
   }, [value]);
 
-  const angle = (v / 100) * 180; // 0..180deg
-  const color = v >= 75 ? "#ff4d6d" : v >= 50 ? "#fb923c" : v >= 25 ? "#f59e0b" : "#34d399";
+  // Color only on the gauge fill: white (low) -> amber -> red (critical)
+  const angle = (v / 100) * 180;
+  const color = v >= 75 ? "#ef4444" : v >= 50 ? "#f59e0b" : v >= 25 ? "#a1a1aa" : "#ffffff";
 
-  // simple arc via SVG
   const r = 70;
   const cx = 90, cy = 90;
   const start = polar(cx, cy, r, 180);
@@ -24,7 +24,7 @@ export function RiskGauge({ value = 0, label = "Risk" }: { value?: number; label
       <svg viewBox="0 0 180 110" className="w-full max-w-[220px]">
         <path
           d={polarArc(cx, cy, r, 180, 0)}
-          stroke="rgba(255,255,255,0.08)"
+          stroke="#262626"
           strokeWidth={12}
           fill="none"
           strokeLinecap="round"
@@ -35,12 +35,11 @@ export function RiskGauge({ value = 0, label = "Risk" }: { value?: number; label
           strokeWidth={12}
           fill="none"
           strokeLinecap="round"
-          style={{ filter: `drop-shadow(0 0 8px ${color}80)` }}
         />
-        <text x="90" y="80" textAnchor="middle" className="fill-foreground" fontSize="28" fontWeight="600">
+        <text x="90" y="80" textAnchor="middle" fill="#ffffff" fontSize="28" fontWeight="600">
           {Math.round(v)}
         </text>
-        <text x="90" y="100" textAnchor="middle" className="fill-muted-foreground" fontSize="11">
+        <text x="90" y="100" textAnchor="middle" fill="#a1a1aa" fontSize="11">
           {label}
         </text>
       </svg>

@@ -40,5 +40,5 @@ export function Typewriter({
     return () => clearTimeout(t);
   }, [j, deleting, i, words, typing, pause]);
 
-  return <span className={className}>{text}<span className="animate-pulse text-cyan-300">|</span></span>;
+  return <span className={className}>{text}<span className="animate-pulse text-white">|</span></span>;
 }

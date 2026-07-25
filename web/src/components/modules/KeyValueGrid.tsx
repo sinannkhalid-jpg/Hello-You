@@ -12,10 +12,10 @@ export function KeyValue({ items, columns = 2 }: { items: { label: string; value
   return (
     <dl className={cn("grid gap-3", colCls)}>
       {items.map((it, i) => (
-        <div key={i} className="rounded-md border border-white/5 bg-white/5 p-3">
-          <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{it.label}</dt>
+        <div key={i} className="rounded-md border border-[#262626] bg-[#0f0f0f] p-3">
+          <dt className="text-[10px] uppercase tracking-wider text-[#a1a1aa]">{it.label}</dt>
           <dd className={cn("mt-1 text-sm break-words", it.mono && "font-mono")}>
-            {it.value ?? <span className="text-muted-foreground">—</span>}
+            {it.value ?? <span className="text-[#71717a]">—</span>}
           </dd>
         </div>
       ))}
@@ -26,7 +26,7 @@ export function KeyValue({ items, columns = 2 }: { items: { label: string; value
 export function CodeBlock({ value, language }: { value: any; language?: string }) {
   const text = typeof value === "string" ? value : JSON.stringify(value, null, 2);
   return (
-    <pre className="rounded-md border border-white/10 bg-black/40 p-3 text-xs font-mono overflow-x-auto max-h-[420px]">
+    <pre className="rounded-md border border-[#262626] bg-[#0a0a0a] p-3 text-xs font-mono overflow-x-auto max-h-[420px] text-[#a1a1aa]">
       <code>{text}</code>
     </pre>
   );

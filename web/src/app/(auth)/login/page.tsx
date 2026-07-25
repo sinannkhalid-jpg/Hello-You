@@ -47,15 +47,15 @@ export default function LoginPage() {
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
       <h2 className="text-2xl font-semibold tracking-tight">Sign in</h2>
-      <p className="text-sm text-muted-foreground mt-1">Welcome back to Hello You.</p>
+      <p className="text-sm text-[#a1a1aa] mt-1">Welcome back to Hello You.</p>
 
-      <Button variant="outline" className="w-full mt-6" onClick={onGoogle}>
+      <Button variant="secondary" className="w-full mt-6" onClick={onGoogle}>
         <GoogleIcon className="h-4 w-4" /> Continue with Google
       </Button>
 
       <div className="flex items-center gap-3 my-5">
         <Separator className="flex-1" />
-        <span className="text-xs text-muted-foreground">OR</span>
+        <span className="text-xs text-[#a1a1aa]">OR</span>
         <Separator className="flex-1" />
       </div>
 
@@ -63,29 +63,29 @@ export default function LoginPage() {
         <div>
           <Label htmlFor="email">Email</Label>
           <div className="relative mt-1.5">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a1a1aa]" />
             <Input id="email" type="email" autoComplete="email" className="pl-9"
                    {...register("email")} placeholder="you@example.com" />
           </div>
-          {errors.email && <p className="text-xs text-rose-400 mt-1">{errors.email.message}</p>}
+          {errors.email && <p className="text-xs text-[#ef4444] mt-1">{errors.email.message}</p>}
         </div>
 
         <div>
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Password</Label>
-            <Link href="/forgot" className="text-xs text-cyan-300 hover:underline">Forgot?</Link>
+            <Link href="/forgot" className="text-xs text-white hover:underline">Forgot?</Link>
           </div>
           <div className="relative mt-1.5">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a1a1aa]" />
             <Input id="password" type={show ? "text" : "password"} autoComplete="current-password" className="pl-9 pr-9"
                    {...register("password")} placeholder="••••••••" />
             <button type="button" onClick={() => setShow((s) => !s)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[#a1a1aa] hover:text-white"
                     aria-label={show ? "Hide password" : "Show password"}>
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          {errors.password && <p className="text-xs text-rose-400 mt-1">{errors.password.message}</p>}
+          {errors.password && <p className="text-xs text-[#ef4444] mt-1">{errors.password.message}</p>}
         </div>
 
         <Button type="submit" className="w-full" disabled={loading}>
@@ -93,9 +93,9 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <p className="text-sm text-muted-foreground mt-6 text-center">
+      <p className="text-sm text-[#a1a1aa] mt-6 text-center">
         New to Hello You?{" "}
-        <Link href="/register" className="text-cyan-300 hover:underline">Create an account</Link>
+        <Link href="/register" className="text-white hover:underline">Create an account</Link>
       </p>
     </motion.div>
   );

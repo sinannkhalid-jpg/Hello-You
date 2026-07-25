@@ -5,7 +5,7 @@ export function Badge({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center rounded-md border border-[#262626] bg-white/[0.04] px-2 py-0.5 text-xs font-medium text-[#a1a1aa]",
         className,
       )}
       {...props}

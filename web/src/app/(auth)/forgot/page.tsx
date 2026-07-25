@@ -32,14 +32,14 @@ export default function ForgotPage() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
-      <Link href="/login" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+      <Link href="/login" className="inline-flex items-center gap-1 text-xs text-[#a1a1aa] hover:text-white">
         <ArrowLeft className="h-3 w-3" /> Back to sign in
       </Link>
       <h2 className="mt-3 text-2xl font-semibold tracking-tight">Forgot password</h2>
-      <p className="text-sm text-muted-foreground mt-1">We&apos;ll email you a reset link.</p>
+      <p className="text-sm text-[#a1a1aa] mt-1">We&apos;ll email you a reset link.</p>
 
       {sent ? (
-        <div className="mt-6 glass rounded-xl p-5 text-sm">
+        <div className="mt-6 rounded-xl border border-[#262626] bg-[#151515] p-5 text-sm">
           If an account exists for that email, a reset link has been sent.
         </div>
       ) : (
@@ -47,10 +47,10 @@ export default function ForgotPage() {
           <div>
             <Label htmlFor="email">Email</Label>
             <div className="relative mt-1.5">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a1a1aa]" />
               <Input id="email" type="email" className="pl-9" {...register("email")} placeholder="you@example.com" />
             </div>
-            {errors.email && <p className="text-xs text-rose-400 mt-1">Enter a valid email</p>}
+            {errors.email && <p className="text-xs text-[#ef4444] mt-1">Enter a valid email</p>}
           </div>
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? "Sending…" : "Send reset link"}

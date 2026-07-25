@@ -44,16 +44,16 @@ export default function RegisterPage() {
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
       <h2 className="text-2xl font-semibold tracking-tight">Create account</h2>
-      <p className="text-sm text-muted-foreground mt-1">Free for educational use. Public data only.</p>
+      <p className="text-sm text-[#a1a1aa] mt-1">Free for educational use. Public data only.</p>
 
-      <Button variant="outline" className="w-full mt-6" type="button"
+      <Button variant="secondary" className="w-full mt-6" type="button"
               onClick={() => toast.info("Configure Supabase to enable Google sign-up.")}>
         <GoogleIcon className="h-4 w-4" /> Continue with Google
       </Button>
 
       <div className="flex items-center gap-3 my-5">
         <Separator className="flex-1" />
-        <span className="text-xs text-muted-foreground">OR</span>
+        <span className="text-xs text-[#a1a1aa]">OR</span>
         <Separator className="flex-1" />
       </div>
 
@@ -61,32 +61,32 @@ export default function RegisterPage() {
         <div>
           <Label htmlFor="full_name">Full name (optional)</Label>
           <div className="relative mt-1.5">
-            <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a1a1aa]" />
             <Input id="full_name" className="pl-9" {...register("full_name")} placeholder="Ada Lovelace" />
           </div>
         </div>
         <div>
           <Label htmlFor="email">Email</Label>
           <div className="relative mt-1.5">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a1a1aa]" />
             <Input id="email" type="email" autoComplete="email" className="pl-9"
                    {...register("email")} placeholder="you@example.com" />
           </div>
-          {errors.email && <p className="text-xs text-rose-400 mt-1">{errors.email.message}</p>}
+          {errors.email && <p className="text-xs text-[#ef4444] mt-1">{errors.email.message}</p>}
         </div>
         <div>
           <Label htmlFor="password">Password</Label>
           <div className="relative mt-1.5">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a1a1aa]" />
             <Input id="password" type={show ? "text" : "password"} autoComplete="new-password" className="pl-9 pr-9"
                    {...register("password")} placeholder="At least 8 characters" />
             <button type="button" onClick={() => setShow((s) => !s)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[#a1a1aa] hover:text-white"
                     aria-label={show ? "Hide password" : "Show password"}>
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          {errors.password && <p className="text-xs text-rose-400 mt-1">{errors.password.message}</p>}
+          {errors.password && <p className="text-xs text-[#ef4444] mt-1">{errors.password.message}</p>}
         </div>
 
         <Button type="submit" className="w-full" disabled={loading}>
@@ -94,9 +94,9 @@ export default function RegisterPage() {
         </Button>
       </form>
 
-      <p className="text-sm text-muted-foreground mt-6 text-center">
+      <p className="text-sm text-[#a1a1aa] mt-6 text-center">
         Already have an account?{" "}
-        <Link href="/login" className="text-cyan-300 hover:underline">Sign in</Link>
+        <Link href="/login" className="text-white hover:underline">Sign in</Link>
       </p>
     </motion.div>
   );

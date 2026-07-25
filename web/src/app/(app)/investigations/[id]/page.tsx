@@ -18,7 +18,7 @@ export default function InvestigationDetailPage({ params }: { params: Promise<{ 
   });
 
   if (error) {
-    return <div className="text-sm text-rose-300">Failed to load investigation.</div>;
+    return <div className="text-sm text-[#ef4444]">Failed to load investigation.</div>;
   }
   if (isLoading || !data) {
     return (

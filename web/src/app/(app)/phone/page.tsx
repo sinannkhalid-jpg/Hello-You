@@ -17,24 +17,24 @@ import { KeyValue } from "@/components/modules/KeyValueGrid";
 import { cn } from "@/lib/utils";
 
 function MessagingStatus({ name, info }: { name: string; info: any }) {
-  let icon = <AlertOctagon className="h-4 w-4 text-muted-foreground" />;
-  let color = "border-white/10 bg-white/5";
+  let icon = <AlertOctagon className="h-4 w-4 text-[#a1a1aa]" />;
+  let color = "border-[#262626] bg-[#0f0f0f]";
   let label = "Unknown";
   if (info?.available === true) {
-    icon = <CheckCircle2 className="h-4 w-4 text-emerald-300" />;
-    color = "border-emerald-500/30 bg-emerald-500/10";
+    icon = <CheckCircle2 className="h-4 w-4 text-[#22c55e]" />;
+    color = "border-[#22c55e]/30 bg-[#22c55e]/5";
     label = "Linked";
   } else if (info?.available === false) {
-    icon = <XCircle className="h-4 w-4 text-rose-300" />;
-    color = "border-rose-500/30 bg-rose-500/10";
+    icon = <XCircle className="h-4 w-4 text-[#ef4444]" />;
+    color = "border-[#ef4444]/30 bg-[#ef4444]/5";
     label = "Not linked";
   } else if (info?.reason === "no_public_api") {
-    icon = <Lock className="h-4 w-4 text-amber-300" />;
-    color = "border-amber-500/30 bg-amber-500/10";
+    icon = <Lock className="h-4 w-4 text-[#f59e0b]" />;
+    color = "border-[#f59e0b]/30 bg-[#f59e0b]/5";
     label = "Unavailable";
   } else if (info?.reason === "lookup_failed" || info?.reason === "request_failed") {
-    icon = <AlertOctagon className="h-4 w-4 text-rose-300" />;
-    color = "border-rose-500/30 bg-rose-500/10";
+    icon = <AlertOctagon className="h-4 w-4 text-[#ef4444]" />;
+    color = "border-[#ef4444]/30 bg-[#ef4444]/5";
     label = "Lookup failed";
   }
   return (
@@ -42,24 +42,24 @@ function MessagingStatus({ name, info }: { name: string; info: any }) {
       <div className="flex items-center gap-2">
         {icon}
         <span className="text-sm font-medium">{name}</span>
-        <span className="ml-auto text-[10px] text-muted-foreground">{label}</span>
+        <span className="ml-auto text-[10px] text-[#a1a1aa]">{label}</span>
       </div>
       {info?.reason && (
-        <p className="text-[11px] text-muted-foreground mt-1.5">
-          <span className="text-foreground/70">Reason:</span> {info.reason}
+        <p className="text-[11px] text-[#a1a1aa] mt-1.5">
+          <span className="text-white/70">Reason:</span> {info.reason}
         </p>
       )}
       {info?.detail && (
-        <p className="text-[11px] text-muted-foreground/80 mt-0.5">{info.detail}</p>
+        <p className="text-[11px] text-[#71717a] mt-0.5">{info.detail}</p>
       )}
       {info?.profile_url && (
         <a href={info.profile_url} target="_blank" rel="noreferrer noopener"
-           className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-cyan-300 hover:text-cyan-200">
+           className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-white hover:text-white/80 underline underline-offset-2 decoration-[#404040]">
           Open <ExternalLink className="h-2.5 w-2.5" />
         </a>
       )}
       {info?.title && (
-        <p className="text-[11px] text-muted-foreground mt-1">{info.title}</p>
+        <p className="text-[11px] text-[#a1a1aa] mt-1">{info.title}</p>
       )}
     </div>
   );
@@ -95,7 +95,7 @@ export default function PhonePage() {
         <div>
           <Label htmlFor="p">Phone number</Label>
           <div className="relative mt-1.5">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a1a1aa]" />
             <Input id="p" value={target} onChange={(e) => setTarget(e.target.value)}
                    onKeyDown={(e) => e.key === "Enter" && run()}
                    placeholder="+1 415 555 2671" className="pl-9" autoFocus />
@@ -112,17 +112,17 @@ export default function PhonePage() {
             <div className="text-5xl">{data.flag_emoji}</div>
             <div className="flex-1">
               <p className="text-2xl font-semibold">{data.country_name || data.country}</p>
-              <p className="text-sm text-muted-foreground">{data.region || "—"}</p>
+              <p className="text-sm text-[#a1a1aa]">{data.region || "—"}</p>
               {data.valid && (
-                <p className="text-[11px] text-emerald-300 mt-1 inline-flex items-center gap-1">
+                <p className="text-[11px] text-[#22c55e] mt-1 inline-flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3" /> valid E.164
                 </p>
               )}
             </div>
             {data.confidence > 0 && (
               <div className="text-right">
-                <p className="text-[10px] text-muted-foreground">Confidence</p>
-                <p className="text-2xl font-semibold text-cyan-300">
+                <p className="text-[10px] text-[#a1a1aa]">Confidence</p>
+                <p className="text-2xl font-semibold text-white">
                   {Math.round((data.confidence || 0) * 100)}%
                 </p>
               </div>
@@ -144,7 +144,7 @@ export default function PhonePage() {
                   { label: "E.164", value: data.e164, mono: true },
                   { label: "Country code", value: data.country_code, mono: true },
                   { label: "Number type", value: data.number_type_name || data.number_type },
-                  { label: "Carrier", value: data.carrier || <span className="text-muted-foreground">Unavailable</span>, mono: !!data.carrier },
+                  { label: "Carrier", value: data.carrier || <span className="text-[#71717a]">Unavailable</span>, mono: !!data.carrier },
                   { label: "Mobile", value: data.is_mobile ? "yes" : "no" },
                   { label: "VoIP", value: data.is_voip ? "yes" : "no" },
                   { label: "Toll-free", value: data.is_toll_free ? "yes" : "no" },
@@ -157,7 +157,7 @@ export default function PhonePage() {
                 ]}
               />
               {Object.keys(formats).length > 0 && (
-                <div className="mt-3 text-[11px] text-muted-foreground">
+                <div className="mt-3 text-[11px] text-[#a1a1aa]">
                   Formats: {formats.e164} · {formats.international} · {formats.national}
                 </div>
               )}
@@ -194,23 +194,23 @@ export default function PhonePage() {
             <CardContent>
               <div className="grid gap-3 sm:grid-cols-2 text-sm">
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Original carrier</p>
+                  <p className="text-[10px] uppercase tracking-wider text-[#a1a1aa]">Original carrier</p>
                   <p className="mt-0.5 font-mono">
-                    {portability.original_carrier || <span className="text-muted-foreground">Unavailable</span>}
+                    {portability.original_carrier || <span className="text-[#71717a]">Unavailable</span>}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Current carrier</p>
+                  <p className="text-[10px] uppercase tracking-wider text-[#a1a1aa]">Current carrier</p>
                   <p className="mt-0.5 font-mono">
                     {portability.current_carrier_known
                       ? <span>—</span>
-                      : <span className="text-muted-foreground">Unavailable — reason: {portability.reason || "unknown"}</span>}
+                      : <span className="text-[#71717a]">Unavailable — reason: {portability.reason || "unknown"}</span>}
                   </p>
                 </div>
               </div>
               {portability.reason && (
-                <p className="mt-3 text-[11px] text-muted-foreground/80">
-                  <span className="text-foreground/70">Reason:</span> {portability.reason}
+                <p className="mt-3 text-[11px] text-[#71717a]">
+                  <span className="text-white/70">Reason:</span> {portability.reason}
                 </p>
               )}
             </CardContent>
@@ -228,25 +228,25 @@ export default function PhonePage() {
             <CardContent>
               <div className="grid gap-3 sm:grid-cols-2 text-sm">
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Spam score</p>
+                  <p className="text-[10px] uppercase tracking-wider text-[#a1a1aa]">Spam score</p>
                   <p className="mt-0.5 font-mono">
                     {reputation.spam_score != null
                       ? reputation.spam_score
-                      : <span className="text-muted-foreground">Unavailable</span>}
+                      : <span className="text-[#71717a]">Unavailable</span>}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Fraud score</p>
+                  <p className="text-[10px] uppercase tracking-wider text-[#a1a1aa]">Fraud score</p>
                   <p className="mt-0.5 font-mono">
                     {reputation.fraud_score != null
                       ? reputation.fraud_score
-                      : <span className="text-muted-foreground">Unavailable</span>}
+                      : <span className="text-[#71717a]">Unavailable</span>}
                   </p>
                 </div>
               </div>
               {reputation.reason && (
-                <p className="mt-3 text-[11px] text-muted-foreground/80">
-                  <span className="text-foreground/70">Reason:</span> {reputation.reason}
+                <p className="mt-3 text-[11px] text-[#71717a]">
+                  <span className="text-white/70">Reason:</span> {reputation.reason}
                   {reputation.detail && <span> — {reputation.detail}</span>}
                 </p>
               )}
@@ -271,7 +271,7 @@ export default function PhonePage() {
 
           {/* Data sources */}
           {data.data_sources && data.data_sources.length > 0 && (
-            <div className="text-[11px] text-muted-foreground text-center">
+            <div className="text-[11px] text-[#a1a1aa] text-center">
               Sources: {data.data_sources.join(" · ")}
             </div>
           )}

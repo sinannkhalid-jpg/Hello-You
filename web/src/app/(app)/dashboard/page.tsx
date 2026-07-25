@@ -1,7 +1,6 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import {
   Search, Activity, ShieldAlert, AlertTriangle, Bookmark, Globe, Network, FileBadge,
   ScanSearch, Cpu, Server, Mail, Phone, Binary, ShieldCheck, User, ArrowUpRight,
@@ -51,10 +50,10 @@ export default function DashboardPage() {
 
       {/* Stats row */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Total Investigations" value={stats.total} icon={Search} accent="cyan" />
-        <StatCard title="Favorites" value={stats.favorites} icon={Bookmark} accent="violet" />
-        <StatCard title="Avg. Risk (last 10)" value={avgRisk} icon={ShieldAlert} accent={avgRisk >= 50 ? "red" : avgRisk >= 25 ? "amber" : "green"} />
-        <StatCard title="Critical Findings" value={stats.by_threat?.critical ?? 0} icon={AlertTriangle} accent="red" />
+        <StatCard title="Total Investigations" value={stats.total} icon={Search} />
+        <StatCard title="Favorites" value={stats.favorites} icon={Bookmark} />
+        <StatCard title="Avg. Risk (last 10)" value={avgRisk} icon={ShieldAlert} />
+        <StatCard title="Critical Findings" value={stats.by_threat?.critical ?? 0} icon={AlertTriangle} />
       </div>
 
       {/* Hero with risk gauge + scan */}
@@ -121,25 +120,25 @@ export default function DashboardPage() {
             {isLoading ? (
               <SkeletonList rows={5} />
             ) : recent.length === 0 ? (
-              <div className="text-sm text-muted-foreground py-8 text-center">
+              <div className="text-sm text-[#a1a1aa] py-8 text-center">
                 No investigations yet. Use the sidebar to start one.
               </div>
             ) : (
-              <ul className="divide-y divide-white/5">
+              <ul className="divide-y divide-[#262626]">
                 {recent.map((r: any) => {
                   const Icon = KIND_ICON[r.kind] || Search;
                   return (
                     <li key={r.id}>
                       <Link
                         href={`/investigations/${r.id}`}
-                        className="flex items-center gap-3 py-3 hover:bg-white/5 rounded-md px-2 -mx-2 transition-colors"
+                        className="flex items-center gap-3 py-3 hover:bg-[#1a1a1a] rounded-md px-2 -mx-2 transition-colors"
                       >
-                        <div className="grid h-9 w-9 place-items-center rounded-md bg-white/5 border border-white/10 text-cyan-200">
+                        <div className="grid h-9 w-9 place-items-center rounded-md bg-[#1a1a1a] border border-[#262626] text-white">
                           <Icon className="h-4 w-4" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium truncate">{r.title || r.target}</p>
-                          <p className="text-xs text-muted-foreground truncate">
+                          <p className="text-xs text-[#a1a1aa] truncate">
                             {r.kind.toUpperCase()} · {fmtRelative(r.created_at)}
                           </p>
                         </div>
@@ -167,12 +166,9 @@ export default function DashboardPage() {
         <LiveInvestigation initialKind="ip" initialTarget="8.8.8.8" />
       </div>
 
-      <motion.p
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-        className="text-xs text-muted-foreground text-center pt-6"
-      >
+      <p className="text-xs text-[#a1a1aa] text-center pt-6">
         All lookups use only publicly available, free OSINT sources. Educational use only.
-      </motion.p>
+      </p>
     </div>
   );
 }

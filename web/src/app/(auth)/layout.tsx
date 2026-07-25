@@ -6,12 +6,12 @@ import { Typewriter } from "@/components/effects/Typewriter";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
+    <div className="min-h-screen grid lg:grid-cols-2 bg-[#090909]">
       {/* Left: marketing panel */}
-      <div className="relative hidden lg:flex flex-col p-10 overflow-hidden">
+      <div className="relative hidden lg:flex flex-col p-10 overflow-hidden border-r border-[#262626]">
         <Link href="/" className="flex items-center gap-2 z-10">
-          <div className="grid h-9 w-9 place-items-center rounded-md bg-gradient-to-br from-cyan-500 to-violet-600 shadow-[0_0_24px_rgba(0,240,255,0.4)]">
-            <Shield className="h-4 w-4 text-white" />
+          <div className="grid h-9 w-9 place-items-center rounded-md bg-white text-black">
+            <Shield className="h-4 w-4" />
           </div>
           <span className="font-semibold">Hello You</span>
         </Link>
@@ -21,20 +21,20 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
             className="text-4xl font-semibold tracking-tight text-balance"
           >
-            Investigate the public web, <span className="text-gradient">responsibly.</span>
+            Investigate the public web, <span className="text-white">responsibly.</span>
           </motion.h1>
-          <p className="mt-4 text-muted-foreground">
+          <p className="mt-4 text-[#a1a1aa]">
             Built on free, public OSINT sources. Port scanning, breach checks, and
             other sensitive operations require explicit confirmation.
           </p>
-          <div className="mt-8 font-mono text-sm text-cyan-300/80">
+          <div className="mt-8 font-mono text-sm text-[#a1a1aa]">
             <Typewriter
               words={["$ whois example.com", "$ resolve example.com → 93.184.216.34", "$ tls verify ok", "$ risk: low"]}
             />
           </div>
         </div>
 
-        <p className="text-xs text-muted-foreground z-10">© {new Date().getFullYear()} Hello You</p>
+        <p className="text-xs text-[#71717a] z-10">© {new Date().getFullYear()} Hello You</p>
       </div>
 
       {/* Right: form area */}

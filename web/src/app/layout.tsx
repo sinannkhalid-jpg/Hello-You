@@ -3,7 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Hello You — Cyber Intelligence Platform",
+  title: "Hello You — Enterprise OSINT Platform",
   description:
     "Educational OSINT platform for authorized investigations and cybersecurity research. Built on publicly available data only.",
   applicationName: "Hello You",
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#020617",
+  themeColor: "#090909",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -21,7 +21,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen">
+      <body className="min-h-screen bg-[#090909] text-white">
         <Providers>{children}</Providers>
       </body>
     </html>

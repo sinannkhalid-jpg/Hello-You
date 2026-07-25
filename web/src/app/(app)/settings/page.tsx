@@ -74,7 +74,7 @@ export default function SettingsPage() {
         <CardContent className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium">Dark mode</p>
-            <p className="text-xs text-muted-foreground">Cyberpunk theme is enabled by default.</p>
+            <p className="text-xs text-[#a1a1aa]">Enterprise dark theme.</p>
           </div>
           <Switch checked={dark} onCheckedChange={setDark} />
         </CardContent>
@@ -110,9 +110,9 @@ export default function SettingsPage() {
           <CardTitle className="flex items-center gap-2"><Shield className="h-4 w-4" /> Security</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
-          <p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Sessions encrypted in transit (HTTPS in prod).</p>
-          <p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Bcrypt password hashing.</p>
-          <p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Rate-limited API (60 req/min by default).</p>
+          <p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#22c55e]" /> Sessions encrypted in transit (HTTPS in prod).</p>
+          <p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#22c55e]" /> Bcrypt password hashing.</p>
+          <p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#22c55e]" /> Rate-limited API (60 req/min by default).</p>
         </CardContent>
       </Card>
 

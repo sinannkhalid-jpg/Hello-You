@@ -25,43 +25,43 @@ import { motion } from "framer-motion";
 function ProviderStatusChip({ name, status }: { name: string; status: any }) {
   if (!status) return null;
   const s = status.status || "unknown";
-  let color = "border-white/10 bg-white/5";
-  let icon = <AlertOctagon className="h-3.5 w-3.5 text-muted-foreground" />;
+  let color = "border-[#262626] bg-[#0f0f0f]";
+  let icon = <AlertOctagon className="h-3.5 w-3.5 text-[#a1a1aa]" />;
   let label = s;
   if (s === "ok" || s === "enabled" || s === "registered" || s === "configured" || s === "no_breaches_found") {
-    color = "border-emerald-500/30 bg-emerald-500/10";
-    icon = <CheckCircle2 className="h-3.5 w-3.5 text-emerald-300" />;
+    color = "border-[#22c55e]/30 bg-[#22c55e]/5";
+    icon = <CheckCircle2 className="h-3.5 w-3.5 text-[#22c55e]" />;
     label = "Success";
   } else if (s === "no_record" || s === "no_breaches" || s === "no_commits" || s === "no_data") {
-    color = "border-sky-500/30 bg-sky-500/10";
-    icon = <CheckCircle2 className="h-3.5 w-3.5 text-sky-300" />;
+    color = "border-[#262626] bg-[#0f0f0f]";
+    icon = <CheckCircle2 className="h-3.5 w-3.5 text-white" />;
     label = s === "no_data" ? "No data" : s === "no_commits" ? "No commits" : s === "no_record" ? "No record" : "No breaches";
   } else if (s === "no_api_key" || s === "missing_key") {
-    color = "border-amber-500/30 bg-amber-500/10";
-    icon = <KeyRound className="h-3.5 w-3.5 text-amber-300" />;
+    color = "border-[#f59e0b]/30 bg-[#f59e0b]/5";
+    icon = <KeyRound className="h-3.5 w-3.5 text-[#f59e0b]" />;
     label = "Missing key";
   } else if (s === "not_configured" || s === "disabled" || s === "lookup_failed") {
-    color = "border-slate-500/30 bg-slate-500/10";
-    icon = <XCircle className="h-3.5 w-3.5 text-slate-300" />;
+    color = "border-[#262626] bg-[#0f0f0f]";
+    icon = <XCircle className="h-3.5 w-3.5 text-[#a1a1aa]" />;
     label = s === "not_configured" ? "Not configured" : s === "lookup_failed" ? "Lookup failed" : "Disabled";
   } else if (s === "blocked" || s === "rate_limited") {
-    color = "border-rose-500/30 bg-rose-500/10";
-    icon = <AlertTriangle className="h-3.5 w-3.5 text-rose-300" />;
+    color = "border-[#ef4444]/30 bg-[#ef4444]/5";
+    icon = <AlertTriangle className="h-3.5 w-3.5 text-[#ef4444]" />;
     label = s === "rate_limited" ? "Rate-limited" : "Blocked";
   } else if (s === "not_supported") {
-    color = "border-amber-500/30 bg-amber-500/10";
-    icon = <XCircle className="h-3.5 w-3.5 text-amber-300" />;
+    color = "border-[#f59e0b]/30 bg-[#f59e0b]/5";
+    icon = <XCircle className="h-3.5 w-3.5 text-[#f59e0b]" />;
     label = "No TLS";
   } else if (s === "not_registered") {
-    color = "border-slate-500/30 bg-slate-500/10";
-    icon = <AlertOctagon className="h-3.5 w-3.5 text-slate-300" />;
+    color = "border-[#262626] bg-[#0f0f0f]";
+    icon = <AlertOctagon className="h-3.5 w-3.5 text-[#a1a1aa]" />;
     label = "Not registered";
   }
   return (
     <div className={cn("rounded-md border p-2.5 text-xs flex items-center gap-2", color)}>
       {icon}
-      <span className="font-medium flex-1">{name}</span>
-      <span className="text-[10px] opacity-80">{label}</span>
+      <span className="font-medium flex-1 text-white">{name}</span>
+      <span className="text-[10px] text-[#a1a1aa]">{label}</span>
     </div>
   );
 }
@@ -125,10 +125,10 @@ export default function EmailPage() {
               <RiskGauge value={rep?.score || 0} label="Reputation" />
               <div className="mt-2"><ThreatChip level={rep?.threat_level || "low"} score={rep?.score} /></div>
               {rep?.findings && rep.findings.length > 0 && (
-                <ul className="mt-3 w-full space-y-1 text-[11px] text-muted-foreground">
+                <ul className="mt-3 w-full space-y-1 text-[11px] text-[#a1a1aa]">
                   {rep.findings.slice(0, 4).map((f: string, i: number) => (
                     <li key={i} className="flex items-start gap-1">
-                      <span className="text-amber-300">•</span> {f}
+                      <span className="text-[#f59e0b]">•</span> {f}
                     </li>
                   ))}
                 </ul>
@@ -148,7 +148,7 @@ export default function EmailPage() {
                   { label: "Domain", value: data.domain, mono: true },
                   { label: "Provider", value: (
                     <span className="inline-flex items-center gap-1.5">
-                      <Building className="h-3 w-3 text-cyan-300" />
+                      <Building className="h-3 w-3 text-white" />
                       {data.provider || "—"}
                     </span>
                   ) },
@@ -219,13 +219,13 @@ export default function EmailPage() {
                       const t = tls?.details?.find((d: any) => d.host === m.host);
                       return (
                         <li key={i} className="flex items-center gap-2">
-                          <Server className="h-3.5 w-3.5 text-cyan-300" />
-                          <span className="font-mono text-xs">priority {m.priority}</span>
+                          <Server className="h-3.5 w-3.5 text-white" />
+                          <span className="font-mono text-xs text-[#a1a1aa]">priority {m.priority}</span>
                           <span className="font-mono">{m.host}</span>
                           {t && (
                             <span className={cn(
                               "ml-auto inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded",
-                              t.tls ? "bg-emerald-500/15 text-emerald-300" : "bg-rose-500/15 text-rose-300",
+                              t.tls ? "bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/30" : "bg-[#ef4444]/10 text-[#ef4444] border border-[#ef4444]/30",
                             )}>
                               <Lock className="h-3 w-3" />
                               {t.tls ? "STARTTLS" : "no TLS"}
@@ -271,7 +271,7 @@ export default function EmailPage() {
                             {gravatarProfile.links.slice(0, 5).map((l: any, i: number) => (
                               l.url ? <li key={i} className="text-[11px]">
                                 <a href={l.url} target="_blank" rel="noreferrer noopener"
-                                   className="text-cyan-300 hover:text-cyan-200 inline-flex items-center gap-1">
+                                   className="text-white hover:text-white/80 inline-flex items-center gap-1 underline underline-offset-2 decoration-[#404040]">
                                   <Globe className="h-3 w-3" /> {l.label || l.url}
                                   <ExternalLink className="h-2.5 w-2.5" />
                                 </a>
@@ -303,22 +303,22 @@ export default function EmailPage() {
               <CardContent>
                 {gitLeaks.found && gitLeaks.commits.length > 0 ? (
                   <ul className="space-y-2 text-xs">
-                    {gitLeaks.commits.map((c: any, i: number) => (
-                      <li key={i} className="rounded border border-white/10 p-2">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-cyan-300">{c.repo}</span>
-                          <span className="text-muted-foreground">·</span>
-                          <span className="text-muted-foreground">{c.date?.slice(0, 10)}</span>
-                        </div>
-                        <p className="text-muted-foreground mt-0.5 break-all">{c.message}</p>
-                        {c.url && (
-                          <a href={c.url} target="_blank" rel="noreferrer noopener"
-                             className="text-[10px] text-cyan-300 hover:text-cyan-200 inline-flex items-center gap-1 mt-1">
-                            <ExternalLink className="h-2.5 w-2.5" /> {c.url.slice(0, 60)}...
-                          </a>
-                        )}
-                      </li>
-                    ))}
+                  {gitLeaks.commits.map((c: any, i: number) => (
+                    <li key={i} className="rounded border border-[#262626] p-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-white">{c.repo}</span>
+                        <span className="text-[#a1a1aa]">·</span>
+                        <span className="text-[#a1a1aa]">{c.date?.slice(0, 10)}</span>
+                      </div>
+                      <p className="text-[#a1a1aa] mt-0.5 break-all">{c.message}</p>
+                      {c.url && (
+                        <a href={c.url} target="_blank" rel="noreferrer noopener"
+                           className="text-[10px] text-white hover:text-white/80 inline-flex items-center gap-1 mt-1 underline underline-offset-2 decoration-[#404040]">
+                          <ExternalLink className="h-2.5 w-2.5" /> {c.url.slice(0, 60)}...
+                        </a>
+                      )}
+                    </li>
+                  ))}
                   </ul>
                 ) : (
                   <p className="text-sm text-muted-foreground">No public commits found for this email.</p>
@@ -333,7 +333,7 @@ export default function EmailPage() {
               <CardHeader>
                 <CardTitle>
                   <span className="inline-flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-rose-300" />
+                    <AlertTriangle className="h-4 w-4 text-[#ef4444]" />
                     Breach exposure ({breach.count})
                   </span>
                 </CardTitle>
@@ -342,17 +342,17 @@ export default function EmailPage() {
               <CardContent>
                 <ul className="space-y-2 text-xs">
                   {breach.samples.map((b: any, i: number) => (
-                    <li key={i} className="rounded border border-rose-500/20 p-2">
+                    <li key={i} className="rounded border border-[#262626] p-2">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{b.name}</span>
-                        {b.is_verified && <span className="text-emerald-300 text-[10px]">✓ verified</span>}
-                        {b.is_sensitive && <span className="text-rose-300 text-[10px]">⚠ sensitive</span>}
-                        <span className="ml-auto text-muted-foreground">{b.breach_date}</span>
+                        {b.is_verified && <span className="text-[#22c55e] text-[10px]">✓ verified</span>}
+                        {b.is_sensitive && <span className="text-[#ef4444] text-[10px]">⚠ sensitive</span>}
+                        <span className="ml-auto text-[#a1a1aa]">{b.breach_date}</span>
                       </div>
                       {b.data_classes && b.data_classes.length > 0 && (
                         <div className="mt-1 flex flex-wrap gap-1">
                           {b.data_classes.map((c: string, j: number) => (
-                            <span key={j} className="rounded bg-rose-500/10 text-rose-300 px-1.5 py-0.5 text-[10px]">
+                            <span key={j} className="rounded bg-[#1a1a1a] text-[#a1a1aa] border border-[#262626] px-1.5 py-0.5 text-[10px]">
                               {c}
                             </span>
                           ))}
@@ -372,12 +372,12 @@ export default function EmailPage() {
 
 function AuthChip({ label, ok }: { label: string; ok: boolean }) {
   return (
-    <div className={`rounded-md border p-2.5 text-center ${ok ? "border-emerald-500/30 bg-emerald-500/10" : "border-rose-500/30 bg-rose-500/10"}`}>
+    <div className={`rounded-md border p-2.5 text-center ${ok ? "border-[#22c55e]/30 bg-[#22c55e]/5" : "border-[#ef4444]/30 bg-[#ef4444]/5"}`}>
       <div className="flex items-center justify-center gap-1.5 text-xs font-medium">
-        {ok ? <ShieldCheck className="h-3.5 w-3.5 text-emerald-300" /> : <ShieldAlert className="h-3.5 w-3.5 text-rose-300" />}
-        <span className={ok ? "text-emerald-300" : "text-rose-300"}>{label}</span>
+        {ok ? <ShieldCheck className="h-3.5 w-3.5 text-[#22c55e]" /> : <ShieldAlert className="h-3.5 w-3.5 text-[#ef4444]" />}
+        <span className={ok ? "text-[#22c55e]" : "text-[#ef4444]"}>{label}</span>
       </div>
-      <p className="text-[10px] text-muted-foreground mt-1">{ok ? "configured" : "missing"}</p>
+      <p className="text-[10px] text-[#a1a1aa] mt-1">{ok ? "configured" : "missing"}</p>
     </div>
   );
 }
@@ -402,8 +402,8 @@ function AuthRowDKIM({ dkim }: { dkim?: any }) {
   }
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-        DKIM <span className="text-emerald-300">(selector: {dkim.selector})</span>
+      <p className="text-[10px] uppercase tracking-wider text-[#a1a1aa]">
+        DKIM <span className="text-[#22c55e]">(selector: {dkim.selector})</span>
       </p>
       <p className="font-mono text-xs mt-0.5 break-all">{(dkim.value || "").slice(0, 80)}…</p>
     </div>
@@ -421,8 +421,8 @@ function AuthRowMTASTS({ mtaSts }: { mtaSts?: any }) {
   }
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-        MTA-STS <span className="text-emerald-300">({mtaSts.mode})</span>
+      <p className="text-[10px] uppercase tracking-wider text-[#a1a1aa]">
+        MTA-STS <span className="text-[#22c55e]">({mtaSts.mode})</span>
       </p>
       <p className="font-mono text-xs mt-0.5 break-all">{(mtaSts.policy || "").slice(0, 100)}</p>
     </div>
