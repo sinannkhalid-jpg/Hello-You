@@ -75,8 +75,12 @@ class Orchestrator:
             inst.api_key = self._resolve_api_key(cls, inst)
             # Enforce the global hard cap on per-call timeouts. The base
             # class defaults to 5s; this clamp protects against any provider
-            # that declares a larger value.
-            cap = BaseProvider.MAX_TIMEOUT_SECONDS
+            # that declares a larger value. Providers that opt out
+            # (e.g. UsernameProvider, which fans out to 30+ platforms and
+            # must not be aborted at 5s) get a higher cap.
+            cap = getattr(cls, "MAX_TIMEOUT_SECONDS", 5.0)
+            if getattr(cls, "allow_long_timeout", False):
+                cap = 30.0
             if inst.timeout_seconds > cap:
                 log.debug(
                     "provider %s timeout %.1fs > cap %.1fs — clamping",

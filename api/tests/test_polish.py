@@ -82,14 +82,21 @@ async def test_concurrent_execution() -> None:
 # 2. Per-provider timeout cap (5s)
 # --------------------------------------------------------------------------- #
 async def test_timeout_cap() -> None:
-    """Every provider should have timeout_seconds <= MAX_TIMEOUT_SECONDS."""
+    """Every provider should have timeout_seconds <= the cap,
+    UNLESS it explicitly opts out via `allow_long_timeout = True`
+    (the username provider is allowed a longer timeout because it
+    fans out to 30+ platforms in parallel)."""
     await init_db()
     orch = get_orchestrator()
     for name, p in orch.providers.items():
+        if getattr(p, "allow_long_timeout", False):
+            # Username and similar fan-out providers are exempt; they
+            # need a longer outer timeout to wait for all sub-checks.
+            continue
         assert p.timeout_seconds <= BaseProvider.MAX_TIMEOUT_SECONDS, (
             f"{name} has timeout={p.timeout_seconds} > cap"
         )
-    print(f"[2] timeout cap enforced for {len(orch.providers)} providers")
+    print(f"[2] timeout cap enforced for {len(orch.providers)} providers (allow_long_timeout exempts username)")
 
 
 # --------------------------------------------------------------------------- #

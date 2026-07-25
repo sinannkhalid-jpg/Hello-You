@@ -111,9 +111,24 @@ includes all the required fields:
 
 Each platform in the username provider is probed by 1+ independent strategies:
 
-- `api`     — public, unauthenticated API endpoint
-- `http`    — public profile URL, 200 + username-in-HTML
-- `oembed`  — platform oEmbed endpoint
+- `api`     — public, unauthenticated API endpoint (GitHub, GitLab, Reddit,
+              Steam XML, Keybase, Gravatar, StackExchange, Dev.to,
+              HackerNews, Mastodon, Instagram web_profile_info, Threads,
+              Bitbucket, YouTube HTML)
+- `http`    — public profile URL inspected for size + title heuristics
+              (Facebook, Instagram fallback, TikTok, X/Twitter, Snapchat,
+              LinkedIn, Pinterest, Telegram, Spotify, Mastodon fallback,
+              SoundCloud, Behance, Dribbble, Vimeo, About.me, HackerNews
+              fallback)
+- `oembed`  — platform oEmbed endpoint (TikTok, Twitch fallback)
+- `graphql` — public unauthenticated GraphQL (Twitch GQL)
 
 Confidence is the weighted agreement of all strategies × a per-platform
 reliability factor. See `app/services/providers/username.py` for details.
+
+## Supported platforms (29)
+
+GitHub, GitLab, Bitbucket, StackOverflow, Dev.to, HackerNews, Keybase,
+Reddit, YouTube, TikTok, Mastodon, Twitch, Steam, Spotify, Twitter/X,
+Instagram, Facebook, Threads, LinkedIn, Pinterest, Snapchat, Telegram,
+Behance, Dribbble, Vimeo, SoundCloud, Gravatar, Medium, About.me.

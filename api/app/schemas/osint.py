@@ -53,6 +53,7 @@ class UsernameResult(BaseModel):
 
 # ---------- Email ----------
 class EmailResult(BaseModel):
+    model_config = ConfigDict(extra="allow")
     email: str
     domain: str
     mx_records: list[dict[str, Any]] = []
@@ -67,8 +68,9 @@ class EmailResult(BaseModel):
 
 # ---------- Phone ----------
 class PhoneResult(BaseModel):
+    model_config = ConfigDict(extra="allow")
     number: str
-    e164: str
+    e164: Optional[str] = ""
     country: Optional[str] = None
     country_code: Optional[str] = None
     region: Optional[str] = None
@@ -76,6 +78,7 @@ class PhoneResult(BaseModel):
     timezone: Optional[str] = None
     number_type: Optional[str] = None
     flag_emoji: Optional[str] = None
+    valid: bool = False
 
 
 # ---------- Domain ----------
@@ -192,8 +195,8 @@ class GraphResult(BaseModel):
 # ---------- AI report ----------
 class AIReportRequest(BaseModel):
     investigation_id: Optional[str] = None
-    target: str
-    kind: str
+    target: str = Field(min_length=1, max_length=512)
+    kind: Literal["domain", "ip", "email", "username", "url"]
     context: dict[str, Any] = {}
 
 
