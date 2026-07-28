@@ -81,7 +81,9 @@ export default function PhonePage() {
   }
 
   const messaging = data?.messaging || {};
-  const reputation = data?.reputation || {};
+  // Canonical risk (spam/fraud scoring). Fall back to the legacy
+  // `reputation` field for back-compat with older backends.
+  const risk = data?.risk ?? data?.reputation ?? {};
   const portability = data?.portability || {};
   const formats = data?.formats || {};
   const timezones = data?.timezones || [];
@@ -216,38 +218,38 @@ export default function PhonePage() {
             </CardContent>
           </Card>
 
-          {/* Reputation */}
+          {/* Risk (spam / fraud scoring) — these are RISK values, not reputation */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ShieldAlert className="h-4 w-4" />
-                Reputation
+                Risk score
               </CardTitle>
-              <CardDescription>Spam / fraud scoring from public sources.</CardDescription>
+              <CardDescription>Spam / fraud scoring from public sources (higher = more risky).</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-3 sm:grid-cols-2 text-sm">
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-[#a1a1aa]">Spam score</p>
+                  <p className="text-[10px] uppercase tracking-wider text-[#a1a1aa]">Spam risk</p>
                   <p className="mt-0.5 font-mono">
-                    {reputation.spam_score != null
-                      ? reputation.spam_score
+                    {risk.spam_score != null
+                      ? risk.spam_score
                       : <span className="text-[#71717a]">Unavailable</span>}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-[#a1a1aa]">Fraud score</p>
+                  <p className="text-[10px] uppercase tracking-wider text-[#a1a1aa]">Fraud risk</p>
                   <p className="mt-0.5 font-mono">
-                    {reputation.fraud_score != null
-                      ? reputation.fraud_score
+                    {risk.fraud_score != null
+                      ? risk.fraud_score
                       : <span className="text-[#71717a]">Unavailable</span>}
                   </p>
                 </div>
               </div>
-              {reputation.reason && (
+              {risk.reason && (
                 <p className="mt-3 text-[11px] text-[#71717a]">
-                  <span className="text-white/70">Reason:</span> {reputation.reason}
-                  {reputation.detail && <span> — {reputation.detail}</span>}
+                  <span className="text-white/70">Reason:</span> {risk.reason}
+                  {risk.detail && <span> — {risk.detail}</span>}
                 </p>
               )}
             </CardContent>

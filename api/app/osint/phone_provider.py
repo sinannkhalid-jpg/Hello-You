@@ -112,6 +112,14 @@ def _empty_result(number: str) -> dict[str, Any]:
                 "detail": "Signal does not provide a public lookup API.",
             },
         },
+        # Canonical: `risk` carries spam/fraud scoring (higher = more risky).
+        "risk": {
+            "spam_score": None,
+            "fraud_score": None,
+            "reason": "no_data",
+            "detail": "No public reputation source is configured.",
+        },
+        # Legacy alias kept for back-compat with older clients.
         "reputation": {
             "spam_score": None,
             "fraud_score": None,
@@ -201,6 +209,14 @@ def lookup(number: str) -> dict:
                 "detail": "Signal does not provide a public lookup API.",
             },
         },
+        # Canonical: `risk` carries spam/fraud scoring (higher = more risky).
+        "risk": {
+            "spam_score": None,
+            "fraud_score": None,
+            "reason": "no_data",
+            "detail": "No public reputation source is configured.",
+        },
+        # Legacy alias.
         "reputation": {
             "spam_score": None,
             "fraud_score": None,

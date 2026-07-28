@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Star, Trash2, Download, ArrowUpRight, FileText, FileSpreadsheet, FileJson } from "lucide-react";
-import { ThreatChip } from "@/components/common/ThreatChip";
+import { RiskChip } from "@/components/common/RiskChip";
 import { SkeletonList } from "@/components/common/SkeletonList";
 import { EmptyState } from "@/components/common/EmptyState";
 import { fmtRelative } from "@/lib/utils";
@@ -112,7 +112,7 @@ export default function SavedPage() {
                         {(KIND_LABEL[i.kind] || i.kind)} · {fmtRelative(i.created_at)}
                       </p>
                     </div>
-                    <ThreatChip level={i.threat_level} score={i.risk_score} />
+                    <RiskChip level={i.risk_level ?? i.threat_level} score={i.risk_score} format="{level} · {score}" />
                     <div className="flex items-center gap-1">
                       <Button size="icon" variant="ghost" onClick={() => favM.mutate(i.id)} aria-label="Favorite">
                         <Star className={`h-4 w-4 ${i.is_favorite ? "fill-white text-white" : "text-[#a1a1aa]"}`} />

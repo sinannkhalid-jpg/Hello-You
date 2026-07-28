@@ -13,7 +13,7 @@ import { RiskDonut } from "@/components/charts/RiskDonut";
 import { CountryBar } from "@/components/charts/CountryBar";
 import { KindBar } from "@/components/charts/KindBar";
 import { SkeletonList } from "@/components/common/SkeletonList";
-import { ThreatChip } from "@/components/common/ThreatChip";
+import { RiskChip } from "@/components/common/RiskChip";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { fmtRelative } from "@/lib/utils";
@@ -142,7 +142,7 @@ export default function DashboardPage() {
                             {r.kind.toUpperCase()} · {fmtRelative(r.created_at)}
                           </p>
                         </div>
-                        <ThreatChip level={r.threat_level} score={r.risk_score} />
+                        <RiskChip level={r.risk_level ?? r.threat_level} score={r.risk_score} format="{level} · {score}" />
                       </Link>
                     </li>
                   );

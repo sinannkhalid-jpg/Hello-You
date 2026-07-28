@@ -118,18 +118,24 @@
     @apply transition-colors duration-150 hover:bg-[#1a1a1a];
   }
 
-  /* Threat chips — flat, no glow */
+  /* Risk chips — flat, no glow. Bands match the canonical risk levels. */
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium border;
   }
-  .chip-low      { @apply bg-[#22c55e]/10  text-[#22c55e]  border-[#22c55e]/30; }
-  .chip-medium   { @apply bg-[#f59e0b]/10  text-[#f59e0b]  border-[#f59e0b]/30; }
-  .chip-high     { @apply bg-[#f59e0b]/15  text-[#f59e0b]  border-[#f59e0b]/40; }
-  .chip-critical { @apply bg-[#ef4444]/10  text-[#ef4444]  border-[#ef4444]/30; }
-  .chip-unknown  { @apply bg-white/[0.04]  text-[#a1a1aa]  border-[#262626]; }
-  .chip-success  { @apply bg-[#22c55e]/10  text-[#22c55e]  border-[#22c55e]/30; }
-  .chip-warning  { @apply bg-[#f59e0b]/10  text-[#f59e0b]  border-[#f59e0b]/30; }
-  .chip-error    { @apply bg-[#ef4444]/10  text-[#ef4444]  border-[#ef4444]/30; }
+  /* Canonical risk levels (use these in new code) */
+  .chip-low-risk    { @apply bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/30; }
+  .chip-guarded     { @apply bg-[#84cc16]/10 text-[#84cc16] border-[#84cc16]/30; }
+  .chip-moderate    { @apply bg-[#f59e0b]/10 text-[#f59e0b] border-[#f59e0b]/30; }
+  .chip-high-risk   { @apply bg-[#f97316]/10 text-[#f97316] border-[#f97316]/30; }
+  .chip-critical    { @apply bg-[#ef4444]/10 text-[#ef4444] border-[#ef4444]/30; }
+  .chip-unknown     { @apply bg-white/[0.04] text-[#a1a1aa] border-[#262626]; }
+  /* Legacy aliases (kept for back-compat) */
+  .chip-low         { @apply bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/30; }
+  .chip-medium      { @apply bg-[#f59e0b]/10 text-[#f59e0b] border-[#f59e0b]/30; }
+  .chip-high        { @apply bg-[#f97316]/10 text-[#f97316] border-[#f97316]/30; }
+  .chip-success     { @apply bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/30; }
+  .chip-warning     { @apply bg-[#f59e0b]/10 text-[#f59e0b] border-[#f59e0b]/30; }
+  .chip-error       { @apply bg-[#ef4444]/10 text-[#ef4444] border-[#ef4444]/30; }
 
   /* Skeleton — flat gray, no shimmer gradient */
   .skeleton {

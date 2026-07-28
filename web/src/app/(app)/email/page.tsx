@@ -13,7 +13,7 @@ import {
   AlertTriangle, Building, FileBadge, Github, Globe, Hash, Eye, ExternalLink,
   CheckCircle2, XCircle, AlertOctagon,
 } from "lucide-react";
-import { ThreatChip } from "@/components/common/ThreatChip";
+import { RiskChip } from "@/components/common/RiskChip";
 import { KeyValue } from "@/components/modules/KeyValueGrid";
 import { RiskGauge } from "@/components/charts/RiskGauge";
 import { fmtDate, isValidEmail, cn } from "@/lib/utils";
@@ -88,7 +88,15 @@ export default function EmailPage() {
   const providers = data?.providers || {};
   const dkim = data?.dkim;
   const tls = data?.tls;
-  const rep = data?.reputation;
+  // Canonical risk data (new). Fall back to the legacy `reputation`
+  // field if the backend didn't include the new `risk` object.
+  const riskObj = data?.risk ?? {
+    score: data?.reputation?.score ?? data?.risk_score ?? 0,
+    level: data?.risk_level ?? "Moderate",
+    findings: data?.reputation?.findings ?? [],
+  };
+  const riskScore: number = data?.risk_score ?? riskObj.score ?? 0;
+  const riskLevel: string = data?.risk_level ?? riskObj.level ?? "Moderate";
   const breach = data?.breach_exposure;
   const gitLeaks = data?.git_leaks;
   const gravatarProfile = data?.gravatar_profile;
@@ -97,13 +105,13 @@ export default function EmailPage() {
   return (
     <ModuleShell
       title="Email Investigation"
-      description="DNS, SPF, DKIM, DMARC, MTA-STS, TLS, BIMI, DNSSEC, RDAP, breach exposure, Gravatar, git leaks, reputation."
+      description="DNS, SPF, DKIM, DMARC, MTA-STS, TLS, BIMI, DNSSEC, RDAP, breach exposure, Gravatar, git leaks, risk score."
       icon={<Mail className="h-5 w-5" />}
       input={
         <div>
           <Label htmlFor="e">Email</Label>
           <div className="relative mt-1.5">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a1a1aa]" />
             <Input id="e" type="email" value={target} onChange={(e) => setTarget(e.target.value)}
                    onKeyDown={(e) => e.key === "Enter" && run()}
                    placeholder="name@example.com" className="pl-9" autoFocus />
@@ -118,15 +126,17 @@ export default function EmailPage() {
         <div className="grid gap-4 lg:grid-cols-3">
           <Card>
             <CardHeader>
-              <CardTitle>Reputation</CardTitle>
-              <CardDescription>0-100, higher = safer.</CardDescription>
+              <CardTitle>Risk Score</CardTitle>
+              <CardDescription>0 = minimal risk · 100 = critical risk.</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center">
-              <RiskGauge value={rep?.score || 0} label="Reputation" />
-              <div className="mt-2"><ThreatChip level={rep?.threat_level || "low"} score={rep?.score} /></div>
-              {rep?.findings && rep.findings.length > 0 && (
+              <RiskGauge value={riskScore} label="Risk" />
+              <div className="mt-2">
+                <RiskChip level={riskLevel} score={riskScore} format="Risk: {level} ({score})" />
+              </div>
+              {riskObj.findings && riskObj.findings.length > 0 && (
                 <ul className="mt-3 w-full space-y-1 text-[11px] text-[#a1a1aa]">
-                  {rep.findings.slice(0, 4).map((f: string, i: number) => (
+                  {riskObj.findings.slice(0, 4).map((f: string, i: number) => (
                     <li key={i} className="flex items-start gap-1">
                       <span className="text-[#f59e0b]">•</span> {f}
                     </li>

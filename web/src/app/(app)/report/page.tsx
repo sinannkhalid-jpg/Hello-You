@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { FileText, Sparkles, Download } from "lucide-react";
 import { CodeBlock } from "@/components/modules/KeyValueGrid";
-import { ThreatChip } from "@/components/common/ThreatChip";
+import { RiskChip } from "@/components/common/RiskChip";
 import { toast } from "sonner";
 
 const KINDS = ["domain", "ip", "email", "username", "phone"] as const;
@@ -82,7 +82,7 @@ export default function ReportPage() {
             {m.data ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <ThreatChip level={m.data.threat_level} score={m.data.risk_score} />
+                  <RiskChip level={m.data.risk_level ?? m.data.threat_level} score={m.data.risk_score} format="Risk: {level} ({score})" />
                   <span className="text-sm text-muted-foreground">{m.data.target}</span>
                 </div>
                 <div>

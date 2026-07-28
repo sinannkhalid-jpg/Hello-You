@@ -1,14 +1,17 @@
-import { threatChip } from "@/lib/utils";
-import { cn } from "@/lib/utils";
-import { ShieldAlert } from "lucide-react";
+/**
+ * ThreatChip — kept for back-compat. Internally, this is now just
+ * a thin wrapper around the new RiskChip so the color/label logic
+ * stays in one place.
+ *
+ *   risk_level  →  band name
+ *   "Low Risk"   (green)
+ *   "Guarded"    (lime)
+ *   "Moderate"   (amber)
+ *   "High Risk"  (orange)
+ *   "Critical"   (red)
+ *
+ * New code should use `RiskChip` directly.
+ */
+import { RiskChip } from "./RiskChip";
 
-export function ThreatChip({ level, className, score }: { level?: string | null; className?: string; score?: number | null }) {
-  const label = (level || "unknown").toString();
-  return (
-    <span className={cn("chip", threatChip(label), className)}>
-      <ShieldAlert className="h-3 w-3" />
-      <span className="capitalize">{label}</span>
-      {score != null && <span className="opacity-80">· {score}</span>}
-    </span>
-  );
-}
+export { RiskChip as ThreatChip };

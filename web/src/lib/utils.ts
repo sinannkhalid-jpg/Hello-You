@@ -34,12 +34,19 @@ export function fmtRelative(iso: string | Date | null | undefined) {
 }
 
 export function threatChip(level?: string | null) {
+  // Back-compat alias: maps any of {short token, canonical name,
+  // legacy "threat_level" value} to the chip class for that band.
+  // Prefer `RiskChip` directly in new code.
   switch ((level || "").toLowerCase()) {
-    case "low":      return "chip-low";
-    case "medium":   return "chip-medium";
-    case "high":     return "chip-high";
-    case "critical": return "chip-critical";
-    default:         return "chip-unknown";
+    case "low":
+    case "low risk":      return "chip-low";
+    case "guarded":       return "chip-guarded";
+    case "medium":
+    case "moderate":      return "chip-medium";
+    case "high":
+    case "high risk":     return "chip-high";
+    case "critical":      return "chip-critical";
+    default:              return "chip-unknown";
   }
 }
 

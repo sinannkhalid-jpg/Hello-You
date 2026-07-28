@@ -20,7 +20,7 @@ Public signals collected:
   - Disposable domain detection
   - Free / business provider classification
   - Domain age & registrar (RDAP/WHOIS)
-  - Reputation score
+  - Risk score (0-100, higher = higher risk)
 
 The DKIM selector list below was tested against Gmail, Outlook,
 Yahoo, ProtonMail, Zoho, iCloud, Fastmail, and a dozen other
@@ -748,9 +748,9 @@ def disposable_domain(domain: str) -> bool:
 
 
 # --------------------------------------------------------------------------- #
-# Reputation / risk scoring
+# Risk score (0-100, higher = higher risk)
 # --------------------------------------------------------------------------- #
-def reputation_score(
+def risk_score_for_email(
     *,
     mx: list[dict[str, Any]],
     spf: str | None,
@@ -763,71 +763,123 @@ def reputation_score(
     breach: dict[str, Any],
     git_leaks: dict[str, Any],
     classification: dict[str, Any],
+    domain_age: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Compute a 0-100 reputation score with a banded label.
+    """Compute a 0-100 risk score for an email / domain.
 
-    The score starts at 100 (best) and subtracts for each negative
-    signal. 100 = pristine corporate email; 0 = no signal at all.
+    The score is interpreted as RISK: higher = more risky.
+      0   = Minimal Risk  (pristine, well-configured corporate email)
+      100 = Critical Risk (multiple severe signals)
+
+    Each signal that INCREASES risk adds to the score. Each signal
+    that DECREASES risk (properly configured email auth) is captured
+    in the `findings` list so the UI can explain the score.
+
+    The bands are:
+        0-20  Low Risk   (green)
+        21-40 Guarded    (lime)
+        41-60 Moderate   (amber)
+        61-80 High Risk  (orange)
+        81-100 Critical  (red)
     """
-    score = 100
+    from app.core.risk import classify
+
+    # Start from 0 (best case). Each negative signal ADDS to the score.
+    score = 0
     findings: list[str] = []
 
+    # ── Email auth (configuration weakness is a risk) ───────────────── #
     if not mx:
-        score -= 30
+        score += 35
         findings.append("No MX records — domain cannot receive email")
     if not spf:
-        score -= 8
-        findings.append("No SPF record")
+        score += 12
+        findings.append("No SPF record — sender identity not declared")
     if not dkim.get("found"):
-        score -= 8
+        score += 12
         findings.append("No DKIM record (selector not found)")
     if not dmarc:
-        score -= 10
-        findings.append("No DMARC record")
+        score += 15
+        findings.append("No DMARC record — spoofing protection absent")
     if not mta_sts.get("enabled"):
-        score -= 3
+        score += 4
         findings.append("MTA-STS not enabled")
-    if tls.get("supports_tls", 0) == 0 and tls.get("checked", 0) > 0:
-        score -= 5
+    if mta_sts.get("enabled") and mta_sts.get("mode") == "enforce":
+        # Strict mode is a positive signal — small reduction
+        score = max(0, score - 3)
+        findings.append("MTA-STS enforced — strict transport policy")
+    if tls.get("checked", 0) > 0 and tls.get("supports_tls", 0) == 0:
+        score += 8
         findings.append("MX server does not support STARTTLS")
+    if tls.get("checked", 0) > 0 and tls.get("supports_tls", 0) == tls.get("checked", 0):
+        # All checked hosts support TLS — small positive
+        score = max(0, score - 2)
+        findings.append("All MX hosts support STARTTLS")
     if dnssec.get("enabled") is False:
-        score -= 5
+        score += 6
         findings.append("DNSSEC not validated")
-    if gravatar.get("exists") is False:
-        score -= 1
-        findings.append("No Gravatar configured")
+    if dnssec.get("enabled") is True:
+        score = max(0, score - 2)
+        findings.append("DNSSEC validated")
+
+    # ── Email identity classification ───────────────────────────────── #
     if classification.get("is_disposable"):
-        score -= 30
+        score += 35
         findings.append("Disposable email provider")
+    if gravatar.get("exists") is False:
+        score += 1
+        findings.append("No Gravatar configured")
+
+    # ── Breach exposure ────────────────────────────────────────────── #
     if breach.get("found") and isinstance(breach.get("count"), int) and breach["count"] > 0:
         n = breach["count"]
-        penalty = min(40, n * 4)
-        score -= penalty
+        penalty = min(40, 8 + n * 4)
+        score += penalty
         findings.append(f"{n} known breach(es)")
+
+    # ── Public git leaks (credential exposure) ────────────────────── #
     if git_leaks.get("found") and git_leaks.get("count", 0) > 0:
         n = git_leaks["count"]
-        score -= min(10, n)
-        findings.append(f"{n} public git commits using this email")
+        score += min(15, 3 + n)
+        findings.append(f"{n} public git commit(s) using this email")
+
+    # ── Domain age (very young domains are higher risk) ────────────── #
+    if domain_age and isinstance(domain_age.get("age_days"), int):
+        age = domain_age["age_days"]
+        if age < 30:
+            score += 12
+            findings.append(f"Domain registered recently ({age} days ago)")
+        elif age < 180:
+            score += 5
+            findings.append(f"Domain registered within the last 6 months ({age} days)")
+        elif age > 1825:  # > 5 years
+            score = max(0, score - 2)
+            findings.append(f"Long-lived domain ({age // 365} years)")
 
     score = max(0, min(100, score))
-
-    if score >= 80:
-        band = "low"
-    elif score >= 60:
-        band = "medium"
-    elif score >= 40:
-        band = "high"
-    else:
-        band = "critical"
-
+    out = classify(score)
     return {
-        "score": score,
-        "threat_level": band,
+        "risk_score": out["risk_score"],
+        "risk_level": out["risk_level"],
+        "color": out["color"],
         "findings": findings,
     }
 
 
-def risk_score(
+# Legacy alias — keeps older callers / imports working during the
+# transition. Internally, this now returns RISK, not reputation.
+def reputation_score(**kwargs: Any) -> dict[str, Any]:
+    """Deprecated. Use `risk_score_for_email` instead.
+
+    Kept as a thin shim so any code that still imports
+    `reputation_score` continues to work. The returned shape now
+    uses the new `risk_score` / `risk_level` keys.
+    """
+    return risk_score_for_email(**kwargs)
+
+
+# Legacy thin wrapper used by the original email router signature.
+def legacy_risk_score(
     email: str,
     mx: list[dict[str, Any]],
     spf: str | None,
@@ -838,19 +890,20 @@ def risk_score(
 ) -> int:
     """Backwards-compatible numeric risk score used by the legacy API.
     Higher = more risky."""
+    dkim_found = (isinstance(dkim, dict) and dkim.get("found")) if dkim else False
     score = 0
-    try:
-        domain = email.split("@", 1)[1]
-    except IndexError:
-        return 0
     if not mx:
         score += 35
     if not spf:
         score += 10
-    if not dkim or (isinstance(dkim, dict) and not dkim.get("found")):
+    if not dkim_found:
         score += 10
     if not dmarc:
         score += 10
+    try:
+        domain = email.split("@", 1)[1]
+    except IndexError:
+        domain = ""
     if disposable_domain(domain):
         score += 25
     if breach:

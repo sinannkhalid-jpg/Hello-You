@@ -6,7 +6,7 @@ failing (Gravatar, HIBP, GitHub commit search) never aborts the
 investigation. The endpoint always returns a 200 with whatever data
 could be gathered.
 
-Response shape:
+Response shape (canonical fields):
   {
     "email":              "...",
     "domain":             "...",
@@ -29,11 +29,16 @@ Response shape:
     "breach_exposure":    {"configured": bool, "found": bool, "count": int, "breaches": [...]},
     "git_leaks":          {"configured": bool, "found": bool, "count": int, "commits": [...]},
     "leakcheck":          {found, score, sources, configured, reason} | null,
-    "reputation":         {"score": 0-100, "threat_level": str, "findings": [...]},
-    "risk_score":         int (legacy field),
-    "threat_level":       str,
-    "providers":          {name: status dict per provider},  # provider diagnostics
+    "risk_score":         int,                 # 0-100, higher = higher risk
+    "risk_level":         str,                 # "Low Risk" / "Guarded" / "Moderate" / "High Risk" / "Critical"
+    "risk":               {score, level, color, findings},  # full breakdown
+    "providers":          {name: status dict per provider},
   }
+
+The legacy fields `reputation`, `threat_level`, and a duplicate
+`risk_score` (int) are kept for backward compatibility with
+existing clients but are deprecated. New clients should read
+`risk_score` and `risk_level`.
 """
 from __future__ import annotations
 
@@ -47,15 +52,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import CurrentUser, get_db
 from app.core.logging import get_logger
+from app.core.risk import classify
 from app.osint.email_provider import (
-    bimi_record, classify_provider, disposable_domain, dkim_record,
-    dmarc_record, dnssec_status, domain_age, git_leaks, gravatar_exists,
-    gravatar_profile, gravatar_url, hibp_breaches, mta_sts_record,
-    nameservers, reputation_score, risk_score, spf_record, split_email,
-    tls_capability,
+    bimi_record, classify_provider, dkim_record, dmarc_record,
+    dnssec_status, domain_age, git_leaks, gravatar_exists,
+    gravatar_profile, hibp_breaches, mta_sts_record, nameservers,
+    risk_score_for_email, spf_record, split_email, tls_capability,
 )
 from app.osint.dns_provider import lookup_mx
-from app.osint.risk import level as _level_fn
 from app.schemas.osint import EmailResult
 from app.services.investigation_service import save_investigation
 from app.services.orchestrator import get_orchestrator
@@ -63,19 +67,6 @@ from app.services.serializer import to_jsonable
 
 router = APIRouter(prefix="/email", tags=["email"])
 log = get_logger("email")
-
-
-def _level(score: int) -> str:
-    try:
-        return _level_fn(score)
-    except Exception:  # noqa: BLE001
-        if score >= 75:
-            return "critical"
-        if score >= 50:
-            return "high"
-        if score >= 25:
-            return "medium"
-        return "low"
 
 
 def _safe(fn, *args, **kwargs):
@@ -282,23 +273,17 @@ async def investigate_email(
         breach_count = len(leakcheck_intel["sources"])
         breach_list = leakcheck_intel["sources"]
 
-    # 5. Reputation
-    rep = reputation_score(
+    # 5. Risk score (canonical, 0-100, higher = higher risk)
+    risk = risk_score_for_email(
         mx=mx_raw, spf=spf, dkim=dkim, dmarc=dmarc,
         mta_sts=mta_sts, tls=tls_data, dnssec=dnssec,
         gravatar=gravatar_data, breach=hibp_data, git_leaks=git_leaks_data,
         classification=classification,
+        domain_age=domain_age_data,
     )
 
-    # 6. Legacy risk score (back-compat for any clients using the int)
-    legacy_score = risk_score(
-        email, mx_raw, spf, dkim, dmarc,
-        hibp_data if hibp_data.get("found") else None,
-        bool(gravatar_data.get("exists")),
-    )
-    # Use the higher of the two scores
-    final_score = max(legacy_score, rep["score"])
-    final_score = min(100, final_score)
+    # Defense-in-depth: if classify() somehow missed it, classify again.
+    cls = classify(risk["risk_score"])
 
     duration_ms = int((time.perf_counter() - t0) * 1000)
 
@@ -336,14 +321,38 @@ async def investigate_email(
             "reason": git_leaks_data.get("reason"),
         },
         "leakcheck": leakcheck_intel,
-        "reputation": rep,
+        # Canonical risk fields (new)
+        "risk_score": cls["risk_score"],
+        "risk_level": cls["risk_level"],
+        "risk": {
+            "score": cls["risk_score"],
+            "level": cls["risk_level"],
+            "color": cls["color"],
+            "findings": risk.get("findings", []),
+        },
+        # Back-compat: legacy aliases
+        "reputation": {
+            "score": cls["risk_score"],
+            "threat_level": _legacy_token(cls["risk_level"]),
+            "findings": risk.get("findings", []),
+        },
+        "threat_level": _legacy_token(cls["risk_level"]),
         "providers": provider_diagnostics,
-        "risk_score": final_score,
-        "threat_level": _level(final_score),
         "duration_ms": duration_ms,
     }
     await save_investigation(
         db, user.id, kind="email", target=email, result=to_jsonable(result),
-        risk_score=final_score, duration_ms=duration_ms,
+        risk_score=cls["risk_score"], duration_ms=duration_ms,
     )
     return EmailResult(**result)
+
+
+def _legacy_token(name: str) -> str:
+    """Convert canonical name to short token for legacy fields."""
+    return {
+        "Low Risk":  "low",
+        "Guarded":   "guarded",
+        "Moderate":  "medium",
+        "High Risk": "high",
+        "Critical":  "critical",
+    }.get(name, "medium")

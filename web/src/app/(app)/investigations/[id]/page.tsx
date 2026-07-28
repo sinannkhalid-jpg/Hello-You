@@ -5,7 +5,7 @@ import { Investigations } from "@/lib/api";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CodeBlock } from "@/components/modules/KeyValueGrid";
-import { ThreatChip } from "@/components/common/ThreatChip";
+import { RiskChip } from "@/components/common/RiskChip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fmtDate, fmtRelative } from "@/lib/utils";
 import { KIND_LABEL } from "@/components/layout/nav";
@@ -34,7 +34,7 @@ export default function InvestigationDetailPage({ params }: { params: Promise<{ 
       <PageHeader
         title={data.title || data.target}
         description={`${KIND_LABEL[data.kind] || data.kind} · ${fmtDate(data.created_at)}`}
-        actions={<ThreatChip level={data.threat_level} score={data.risk_score} />}
+        actions={<RiskChip level={data.risk_level ?? data.threat_level} score={data.risk_score} format="Risk: {level} ({score})" />}
       />
       <Card>
         <CardHeader>

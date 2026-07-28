@@ -1,10 +1,42 @@
-"""Pydantic schemas for OSINT module responses."""
+"""Pydantic schemas for OSINT module responses.
+
+Risk score semantics (consistent across the entire application):
+
+  risk_score: 0-100  — higher = higher risk
+  risk_level: "Low Risk" | "Guarded" | "Moderate" | "High Risk" | "Critical"
+
+The legacy `threat_level` field is still accepted as input (with
+short tokens) and emitted on the response (deprecated) for backward
+compatibility. New code should use `risk_level` and `risk_score`.
+"""
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+
+def _normalize_risk_level(v: str | None) -> str:
+    """Accept either the canonical names or the legacy short tokens
+    and always return a canonical full name. This is used for the
+    `risk_level` field on every schema that carries one."""
+    if not v:
+        return "Moderate"
+    k = v.strip().lower()
+    mapping = {
+        "low":      "Low Risk",
+        "guarded":  "Guarded",
+        "medium":   "Moderate",
+        "high":     "High Risk",
+        "critical": "Critical",
+    }
+    if k in mapping:
+        return mapping[k]
+    for n in ("Low Risk", "Guarded", "Moderate", "High Risk", "Critical"):
+        if n.lower() == k:
+            return n
+    return "Moderate"
 
 
 # ---------- Shared ----------
@@ -16,9 +48,14 @@ class InvestigationSummary(BaseModel):
     target: str
     title: Optional[str] = None
     risk_score: Optional[int] = None
-    threat_level: Optional[str] = None
+    risk_level: Optional[str] = None
     is_favorite: bool
     created_at: datetime
+
+    @field_validator("risk_level", mode="before")
+    @classmethod
+    def _norm_risk_level(cls, v: Any) -> Any:
+        return _normalize_risk_level(v) if isinstance(v, str) else v
 
 
 class InvestigationDetail(InvestigationSummary):
@@ -81,11 +118,38 @@ class EmailResult(BaseModel):
     breach_exposure: Optional[dict[str, Any]] = None
     git_leaks: Optional[dict[str, Any]] = None
     leakcheck: Optional[dict[str, Any]] = None
-    reputation: Optional[dict[str, Any]] = None
-    providers: dict[str, Any] = {}
+    # Canonical risk fields (new)
     risk_score: int = 0
-    threat_level: str = "low"
+    risk_level: str = "Moderate"
+    risk: Optional[dict[str, Any]] = None
+    # Back-compat: legacy alias
+    reputation: Optional[dict[str, Any]] = None
+    threat_level: str = "moderate"  # legacy short token, derived from risk_level
+    providers: dict[str, Any] = {}
     duration_ms: int = 0
+
+    @field_validator("risk_level", mode="before")
+    @classmethod
+    def _norm_risk_level(cls, v: Any) -> Any:
+        return _normalize_risk_level(v) if isinstance(v, str) else v
+
+    @field_validator("threat_level", mode="before")
+    @classmethod
+    def _norm_threat(cls, v: Any) -> Any:
+        # Keep the short token form on the legacy field
+        if not v:
+            return "moderate"
+        k = v.strip().lower()
+        if k in ("low", "guarded", "medium", "high", "critical"):
+            return k
+        # If a canonical name is passed, map to short token
+        return {
+            "Low Risk":  "low",
+            "Guarded":   "guarded",
+            "Moderate":  "medium",
+            "High Risk": "high",
+            "Critical":  "critical",
+        }.get(v, "moderate")
 
 
 # ---------- Phone ----------
@@ -111,7 +175,8 @@ class PhoneResult(BaseModel):
     is_premium_rate: bool = False
     formats: dict[str, Any] = {}
     messaging: dict[str, Any] = {}
-    reputation: dict[str, Any] = {}
+    risk: dict[str, Any] = {}            # NEW canonical — spam/fraud scoring as risk
+    reputation: dict[str, Any] = {}       # legacy alias for risk
     portability: dict[str, Any] = {}
     business_association: Optional[Any] = None
     confidence: float = 0.0
@@ -174,7 +239,13 @@ class DomainResult(BaseModel):
     cdn: Optional[str] = None
     hosting: Optional[str] = None
     risk_score: int = 0
-    threat_level: str = "low"
+    risk_level: str = "Moderate"
+    threat_level: str = "moderate"  # legacy short token
+
+    @field_validator("risk_level", mode="before")
+    @classmethod
+    def _norm_risk_level(cls, v: Any) -> Any:
+        return _normalize_risk_level(v) if isinstance(v, str) else v
 
 
 # ---------- IP ----------
@@ -199,7 +270,13 @@ class IPResult(BaseModel):
     threat_intel: dict[str, Any] = {}
     abuse_reports: Optional[int] = None
     risk_score: int = 0
-    threat_level: str = "low"
+    risk_level: str = "Moderate"
+    threat_level: str = "moderate"  # legacy short token
+
+    @field_validator("risk_level", mode="before")
+    @classmethod
+    def _norm_risk_level(cls, v: Any) -> Any:
+        return _normalize_risk_level(v) if isinstance(v, str) else v
 
 
 # ---------- Subdomains ----------
@@ -240,8 +317,9 @@ class AIReportRequest(BaseModel):
 class AIReport(BaseModel):
     target: str
     kind: str
-    threat_level: str
-    risk_score: int
+    risk_level: str = "Moderate"
+    risk_score: int = 0
+    threat_level: str = "moderate"  # legacy short token
     executive_summary: str
     risk_assessment: str
     findings: list[str]
@@ -249,3 +327,8 @@ class AIReport(BaseModel):
     recommendations: list[str]
     mitre_attack: list[dict[str, Any]] = []
     generated_at: datetime
+
+    @field_validator("risk_level", mode="before")
+    @classmethod
+    def _norm_risk_level(cls, v: Any) -> Any:
+        return _normalize_risk_level(v) if isinstance(v, str) else v

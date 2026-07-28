@@ -1,4 +1,9 @@
-"""Risk scoring helpers shared across modules."""
+"""Risk scoring helpers shared across modules.
+
+NOTE: The canonical Risk Score definitions now live in
+`app.core.risk`. This file is kept for the `clamp`, `aggregate`,
+and `level` helpers still used by some legacy call sites.
+"""
 from __future__ import annotations
 
 from typing import Iterable
@@ -9,12 +14,16 @@ def clamp(value: int, lo: int = 0, hi: int = 100) -> int:
 
 
 def level(score: int) -> str:
-    if score >= 75:
+    """Legacy short-token form. Prefer app.core.risk.classify() which
+    returns both the canonical name and the color."""
+    if score >= 81:
         return "critical"
-    if score >= 50:
+    if score >= 61:
         return "high"
-    if score >= 25:
+    if score >= 41:
         return "medium"
+    if score >= 21:
+        return "guarded"
     return "low"
 
 

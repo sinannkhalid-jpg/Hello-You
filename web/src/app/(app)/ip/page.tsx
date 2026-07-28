@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Server, Search, ShieldAlert, Building2, Globe } from "lucide-react";
-import { ThreatChip } from "@/components/common/ThreatChip";
+import { RiskChip } from "@/components/common/RiskChip";
 import { KeyValue, CodeBlock } from "@/components/modules/KeyValueGrid";
 import { RiskGauge } from "@/components/charts/RiskGauge";
 import { isValidIp } from "@/lib/utils";
@@ -107,7 +107,7 @@ export default function IpPage() {
             </CardHeader>
             <CardContent className="flex flex-col items-center">
               <RiskGauge value={data.risk_score || 0} />
-              <ThreatChip level={data.threat_level} score={data.risk_score} />
+              <RiskChip level={data.risk_level ?? data.threat_level} score={data.risk_score} format="Risk: {level} ({score})" />
             </CardContent>
           </Card>
           <Card className="lg:col-span-2">
